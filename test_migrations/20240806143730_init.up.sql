@@ -14,8 +14,8 @@ create table houses (
                         address text not null,
                         construct_year int,
                         developer text,
-                        create_house_date timestamp without time zone,
-                        update_flat_date timestamp without time zone
+                        create_house_date timestamp(0) without time zone,
+                        update_flat_date timestamp(0) without time zone
 );
 
 create table flats (
@@ -128,11 +128,17 @@ end;
 $$ language plpgsql;
 
 
-insert into houses(address, construct_year, developer, create_house_date, update_flat_date)
-values ('address', 2021, 'dev', now(), now());
-
-insert into houses(address, construct_year, developer, create_house_date, update_flat_date)
-values ('address', 2022, 'dev', now(), now());
+insert into houses (address, construct_year, developer, create_house_date, update_flat_date) VALUES
+('ул. Спортивная, д. 1', 2021, 'OOO Строй', now(), now()),
+('ул. Спортивная, д. 2', 2020, 'ЗАО Строительство', now(), now()),
+('ул. Спортивная, д. 3', 2019, 'ИП Строитель', now(), now()),
+('ул. Спортивная, д. 4', 2022, 'ЗАО Новострой', now(), now()),
+('ул. Спортивная, д. 5', 2021, 'OOO Строй', now(), now()),
+('ул. Спортивная, д. 6', 2023, 'Компания Реал', now(), now()),
+('ул. Спортивная, д. 7', 2020, 'ООО БК Строй', now(), now()),
+('ул. Спортивная, д. 8', 2021, 'ЗАО Строительство', now(), now()),
+('ул. Спортивная, д. 9', 2022, 'ООО Комфорт', now(), now()),
+('ул. Спортивная, д. 10', 2018, 'ИП СтройПроект', now(), now());
 
 insert into users(user_id, mail, password, role)
 values ('019126ee-2b7d-758e-bb22-fe2e45b2db22', 'test@mail.ru', 'password', 'client');
@@ -140,5 +146,29 @@ values ('019126ee-2b7d-758e-bb22-fe2e45b2db22', 'test@mail.ru', 'password', 'cli
 insert into users(user_id, mail, password, role)
 values ('019126ee-2b7d-758e-bb22-fe2e45b2db23', 'test@mail.ru', 'password', 'moderator');
 
+INSERT INTO users (user_id, mail, password, role) VALUES
+('019126ee-2b7d-758e-bb22-fe2e45b2db24', 'user1@mail.ru', 'password1', 'client'),
+('019126ee-2b7d-758e-bb22-fe2e45b2db30', 'user2@mail.ru', 'password2', 'moderator'),
+('019126ee-2b7d-758e-bb22-fe2e45b2db25', 'user3@mail.ru', 'password3', 'client'),
+('019126ee-2b7d-758e-bb22-fe2e45b2db31', 'user4@mail.ru', 'password4', 'client'),
+('019126ee-2b7d-758e-bb22-fe2e45b2db33', 'user5@mail.ru', 'password5', 'moderator'),
+('019126ee-2b7d-758e-bb22-fe2e45b2db26', 'user6@mail.ru', 'password6', 'client'),
+('019126ee-2b7d-758e-bb22-fe2e45b2db27', 'user7@mail.ru', 'password7', 'client'),
+('019126ee-2b7d-758e-bb22-fe2e45b2db32', 'user8@mail.ru', 'password8', 'moderator'),
+('019126ee-2b7d-758e-bb22-fe2e45b2db28', 'user9@mail.ru', 'password9', 'client'),
+('019126ee-2b7d-758e-bb22-fe2e45b2db29', 'user10@mail.ru', 'password10', 'client');
+
 insert into flats(flat_id, house_id, user_id, price, rooms, status)
 values (10, 1, '019126ee-2b7d-758e-bb22-fe2e45b2db22', 100, 2, 'created');
+
+INSERT INTO flats (flat_id, house_id, user_id, price, rooms, status) VALUES
+(1, 1, '019126ee-2b7d-758e-bb22-fe2e45b2db22', 100, 2, 'created'),
+(2, 1, '019126ee-2b7d-758e-bb22-fe2e45b2db24', 150, 3, 'approved'),
+(3, 2, '019126ee-2b7d-758e-bb22-fe2e45b2db24', 200, 2, 'declined'),
+(4, 2, '019126ee-2b7d-758e-bb22-fe2e45b2db25', 250, 4, 'on moderation'),
+(5, 3, '019126ee-2b7d-758e-bb22-fe2e45b2db26', 300, 1, 'created'),
+(6, 3, '019126ee-2b7d-758e-bb22-fe2e45b2db27', 350, 2, 'approved'),
+(7, 4, '019126ee-2b7d-758e-bb22-fe2e45b2db28', 400, 3, 'declined'),
+(8, 4, '019126ee-2b7d-758e-bb22-fe2e45b2db29', 450, 4, 'on moderation'),
+(9, 5, '019126ee-2b7d-758e-bb22-fe2e45b2db29', 500, 2, 'created'),
+(10, 5, '019126ee-2b7d-758e-bb22-fe2e45b2db29', 550, 3, 'approved');

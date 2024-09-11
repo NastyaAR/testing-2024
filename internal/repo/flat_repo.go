@@ -77,7 +77,7 @@ func (p *PostgresFlatRepo) DeleteByID(ctx context.Context, flatID int, houseID i
 	lg.Info("postgres flat repo: delete by id")
 
 	query := `delete from flats where flat_id=$1 and house_id=$2`
-	_, err := p.retryAdapter.Exec(ctx, query, flatID, houseID)
+	_, err := p.db.Exec(ctx, query, flatID, houseID)
 	if err != nil {
 		lg.Warn("postgres flat repo: delete by id error", zap.Error(err))
 		return fmt.Errorf("postgres flat repo: delete by id error: %v", err.Error())
@@ -95,9 +95,9 @@ func (p *PostgresFlatRepo) Update(ctx context.Context, moderatorID uuid.UUID, ne
 
 	query := `select flat_id, house_id, user_id, price, rooms, status from update_status($1, $2, $3, $4)`
 
-	rows := p.retryAdapter.QueryRow(ctx, query, newFlatData.Status,
+	rows := p.db.QueryRow(ctx, query, newFlatData.Status,
 		newFlatData.ID, newFlatData.HouseID, moderatorID)
-	defer rows.Close()
+	//defer rows.Close()
 
 	err := rows.Scan(&flat.ID, &flat.HouseID, &flat.UserID,
 		&flat.Price, &flat.Rooms, &flat.Status)
@@ -115,8 +115,8 @@ func (p *PostgresFlatRepo) GetByID(ctx context.Context, flatID int, houseID int,
 
 	query := `select flat_id, house_id, user_id, price, rooms, status
 	from flats where flat_id=$1 and house_id=$2`
-	rows := p.retryAdapter.QueryRow(ctx, query, flatID, houseID)
-	defer rows.Close()
+	rows := p.db.QueryRow(ctx, query, flatID, houseID)
+
 	err := rows.Scan(&flat.ID, &flat.HouseID, &flat.UserID,
 		&flat.Price, &flat.Rooms, &flat.Status)
 	if err != nil {
@@ -131,7 +131,7 @@ func (p *PostgresFlatRepo) GetAll(ctx context.Context, offset int, limit int, lg
 	lg.Info("postgres flat repo: get all")
 
 	query := `select flat_id, house_id, user_id, price, rooms, status from flats limit $1 offset $2`
-	rows, err := p.retryAdapter.Query(ctx, query, limit, offset)
+	rows, err := p.db.Query(ctx, query, limit, offset)
 	defer rows.Close()
 	if err != nil {
 		lg.Warn("postgres flat repo: get all error", zap.Error(err))

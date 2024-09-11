@@ -24,7 +24,7 @@ func (p *PostgresNotifyRepo) GetNoSendNotifies(ctx context.Context, lg *zap.Logg
 	lg.Info("postgres notify repo: get no send notifies")
 
 	query := `select * from new_flats_outbox where status=$1`
-	rows, err := p.retryAdapter.Query(ctx, query, domain.NoSendedNotifyStatus)
+	rows, err := p.db.Query(ctx, query, domain.NoSendedNotifyStatus)
 	defer rows.Close()
 	if err != nil {
 		lg.Warn("postgres notify repo: get no send notifies", zap.Error(err))
@@ -52,7 +52,7 @@ func (p *PostgresNotifyRepo) SendNotifyByID(ctx context.Context, id int, lg *zap
 	lg.Info("postgres notify repo: send notify by id")
 
 	query := `update new_flats_outbox set status=$1`
-	_, err := p.retryAdapter.Exec(ctx, query, domain.SendedNotifyStatus)
+	_, err := p.db.Exec(ctx, query, domain.SendedNotifyStatus)
 	if err != nil {
 		lg.Warn("postgres notify repo: send notify by id error", zap.Error(err))
 		return fmt.Errorf("postgres notify repo: send notify by id error: %v", err.Error())

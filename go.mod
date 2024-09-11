@@ -25,6 +25,9 @@ require (
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/lib/pq v1.10.9 // indirect
+	github.com/ozontech/allure-go/pkg/allure v0.6.13 // indirect
+	github.com/ozontech/allure-go/pkg/framework v0.6.32 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
