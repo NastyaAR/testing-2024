@@ -133,13 +133,13 @@ func (p *PostgresHouseRepo) GetFlatsByHouseID(ctx context.Context, id int, statu
 		err  error
 	)
 	if status == domain.ModeratingStatus {
-		query = `select flat_id, houses.house_id, price, rooms, status 
+		query = `select flat_id, houses.house_id, user_id, price, rooms, status 
 			from flats join houses
 			on flats.house_id = houses.house_id
 			where houses.house_id=$1 and flats.status=$2`
 		rows, err = p.db.Query(ctx, query, id, status)
 	} else {
-		query = `select flat_id, houses.house_id, price, rooms, status 
+		query = `select flat_id, houses.house_id, user_id, price, rooms, status 
 			from flats join houses
 			on flats.house_id = houses.house_id
 			where houses.house_id=$1`
@@ -155,7 +155,7 @@ func (p *PostgresHouseRepo) GetFlatsByHouseID(ctx context.Context, id int, statu
 	var flats []domain.Flat
 	for rows.Next() {
 		flat := domain.Flat{}
-		err = rows.Scan(&flat.ID, &flat.HouseID, &flat.Price, &flat.Rooms, &flat.Status)
+		err = rows.Scan(&flat.ID, &flat.HouseID, &flat.UserID, &flat.Price, &flat.Rooms, &flat.Status)
 		if err != nil {
 			lg.Warn("postgres house repo: get all error: scan house error", zap.Error(err))
 			continue

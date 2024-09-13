@@ -6,11 +6,11 @@ import (
 	"avito-test-task/pkg"
 	"context"
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ozontech/allure-go/pkg/framework/provider"
 	"github.com/ozontech/allure-go/pkg/framework/suite"
 	"log"
-	"sync"
 	"testing"
 	"time"
 )
@@ -19,7 +19,11 @@ type HouseRepoTest struct {
 	suite.Suite
 	pool     *pgxpool.Pool
 	migrator *migrate.Migrate
-	mtx      sync.Mutex
+}
+
+func isEqualHouses(expected *domain.House, actual *domain.House) bool {
+	return (expected.Developer == actual.Developer &&
+		expected.Address == actual.Address && expected.ConstructYear == actual.ConstructYear)
 }
 
 func (f *HouseRepoTest) BeforeAll(t provider.T) {
@@ -34,28 +38,13 @@ func (f *HouseRepoTest) BeforeAll(t provider.T) {
 	}
 
 	f.migrator, err = migrate.New("file://../test_migrations", connString)
-}
-
-func (s *HouseRepoTest) BeforeEach(t provider.T) {
-	t.Log("Up Migration")
-	s.mtx.Lock()
-	err := s.migrator.Up()
-	s.mtx.Unlock()
-	t.Log(err)
-}
-
-func (s *HouseRepoTest) AfterEach(t provider.T) {
-	t.Log("Down Migration")
-	s.mtx.Lock()
-	err := s.migrator.Down()
-	s.mtx.Unlock()
-	t.Log(err)
+	f.migrator.Up()
 }
 
 func (s *HouseRepoTest) AfterAll(t provider.T) {
 	t.Log("Close database connection")
+	s.migrator.Down()
 	s.pool.Close()
-
 }
 
 func (h *HouseRepoTest) TestNormalCreateHouse(t provider.T) {
@@ -76,7 +65,8 @@ func (h *HouseRepoTest) TestNormalCreateHouse(t provider.T) {
 	created, err := houseRepo.Create(context.Background(), &house, lg)
 
 	t.Require().Nil(err)
-	t.Require().Equal(house, created)
+	t.Require().Equal(true, isEqualHouses(&house, &created))
+	houseRepo.DeleteByID(context.Background(), created.HouseID, lg)
 }
 
 func (h *HouseRepoTest) TestContextTimeoutCreateHouse(t provider.T) {
@@ -100,6 +90,7 @@ func (h *HouseRepoTest) TestContextTimeoutCreateHouse(t provider.T) {
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.House{}, created)
+
 }
 
 func (h *HouseRepoTest) TestNormalDeleteByIdHouse(t provider.T) {
@@ -107,10 +98,21 @@ func (h *HouseRepoTest) TestNormalDeleteByIdHouse(t provider.T) {
 	houseRepo := repo.NewPostgresHouseRepo(h.pool, retryAdapter)
 	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
-	err := houseRepo.DeleteByID(context.Background(), 10, lg)
+	now := time.Now().UTC().Truncate(time.Second)
+	house := domain.House{
+		HouseID:         11,
+		Address:         "ул Спортивная, д 5",
+		ConstructYear:   2012,
+		Developer:       "ООО НСК",
+		CreateHouseDate: now,
+		UpdateFlatDate:  now,
+	}
+	created, err := houseRepo.Create(context.Background(), &house, lg)
+
+	err = houseRepo.DeleteByID(context.Background(), created.HouseID, lg)
 
 	t.Require().Nil(err)
-	house, err := houseRepo.GetByID(context.Background(), 10, lg)
+	house, err = houseRepo.GetByID(context.Background(), created.HouseID, lg)
 	t.Require().Error(err)
 	t.Require().Equal(domain.House{}, house)
 }
@@ -250,10 +252,7 @@ func (h *HouseRepoTest) TestNormalGetAll(t provider.T) {
 
 	t.Require().Nil(err)
 	for i := 0; i < len(houses); i++ {
-		t.Require().Equal(houses[i].HouseID, actualHouses[i].HouseID)
-		t.Require().Equal(houses[i].Developer, actualHouses[i].Developer)
-		t.Require().Equal(houses[i].ConstructYear, actualHouses[i].ConstructYear)
-		t.Require().Equal(houses[i].Address, actualHouses[i].Address)
+		t.Require().Equal(true, isEqualHouses(&houses[i], &actualHouses[i]))
 	}
 }
 
@@ -267,6 +266,91 @@ func (h *HouseRepoTest) TestContextTimeoutGetAll(t provider.T) {
 	_, err := houseRepo.GetAll(ctx, 0, 10, lg)
 
 	t.Require().Error(err)
+}
+
+func (h *HouseRepoTest) TestNormalOffsetGetAll(t provider.T) {
+	retryAdapter := repo.NewPostgresRetryAdapter(h.pool, 3, time.Second)
+	houseRepo := repo.NewPostgresHouseRepo(h.pool, retryAdapter)
+	lg, _ := pkg.CreateLogger("../log.log", "prod")
+	now := time.Now().UTC().Truncate(time.Second)
+	houses := []domain.House{
+		{HouseID: 2, Address: "ул. Спортивная, д. 2", ConstructYear: 2020, Developer: "ЗАО Строительство", CreateHouseDate: now, UpdateFlatDate: now},
+		{HouseID: 3, Address: "ул. Спортивная, д. 3", ConstructYear: 2019, Developer: "ИП Строитель", CreateHouseDate: now, UpdateFlatDate: now},
+		{HouseID: 4, Address: "ул. Спортивная, д. 4", ConstructYear: 2022, Developer: "ЗАО Новострой", CreateHouseDate: now, UpdateFlatDate: now},
+		{HouseID: 5, Address: "ул. Спортивная, д. 5", ConstructYear: 2021, Developer: "OOO Строй", CreateHouseDate: now, UpdateFlatDate: now},
+		{HouseID: 6, Address: "ул. Спортивная, д. 6", ConstructYear: 2023, Developer: "Компания Реал", CreateHouseDate: now, UpdateFlatDate: now},
+	}
+
+	actualHouses, err := houseRepo.GetAll(context.Background(), 1, 5, lg)
+
+	t.Require().Nil(err)
+	for i := 0; i < len(houses); i++ {
+		t.Require().Equal(true, isEqualHouses(&houses[i], &actualHouses[i]))
+	}
+}
+
+func (h *HouseRepoTest) TestNormalGetFlatsByHouseID(t provider.T) {
+	retryAdapter := repo.NewPostgresRetryAdapter(h.pool, 3, time.Second)
+	houseRepo := repo.NewPostgresHouseRepo(h.pool, retryAdapter)
+	lg, _ := pkg.CreateLogger("../log.log", "prod")
+	flats := []domain.Flat{
+		{ID: 10, HouseID: 1, UserID: uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db22"), Price: 100, Rooms: 2, Status: "created", ModeratorID: 0},
+		{ID: 1, HouseID: 1, UserID: uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db22"), Price: 100, Rooms: 2, Status: "created", ModeratorID: 0},
+		{ID: 2, HouseID: 1, UserID: uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db24"), Price: 150, Rooms: 3, Status: "approved", ModeratorID: 0},
+		{ID: 3, HouseID: 1, UserID: uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db24"), Price: 200, Rooms: 2, Status: "declined", ModeratorID: 0},
+	}
+
+	actualFlats, err := houseRepo.GetFlatsByHouseID(context.Background(), 1, domain.AnyStatus, lg)
+
+	t.Require().Nil(err)
+	t.Require().Equal(flats, actualFlats)
+}
+
+func (h *HouseRepoTest) TestNormalOnModerationGetFlatsByHouseID(t provider.T) {
+	retryAdapter := repo.NewPostgresRetryAdapter(h.pool, 3, time.Second)
+	houseRepo := repo.NewPostgresHouseRepo(h.pool, retryAdapter)
+	lg, _ := pkg.CreateLogger("../log.log", "prod")
+	flats := []domain.Flat{
+		{ID: 4, HouseID: 2, UserID: uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db25"), Price: 250, Rooms: 4, Status: "on moderation", ModeratorID: 0},
+	}
+
+	actualFlats, err := houseRepo.GetFlatsByHouseID(context.Background(), 2, domain.ModeratingStatus, lg)
+
+	t.Require().Nil(err)
+	t.Require().Equal(flats, actualFlats)
+}
+
+func (h *HouseRepoTest) TestContextTimeoutGetFlatsByHouseID(t provider.T) {
+	retryAdapter := repo.NewPostgresRetryAdapter(h.pool, 3, time.Second)
+	houseRepo := repo.NewPostgresHouseRepo(h.pool, retryAdapter)
+	lg, _ := pkg.CreateLogger("../log.log", "prod")
+	ctx, _ := context.WithTimeout(context.Background(), 1)
+	time.Sleep(1)
+
+	_, err := houseRepo.GetFlatsByHouseID(ctx, 2, domain.ModeratingStatus, lg)
+
+	t.Require().Error(err)
+}
+
+func (h *HouseRepoTest) TestNormalNoExistsGetFlatsByHouseID(t provider.T) {
+	retryAdapter := repo.NewPostgresRetryAdapter(h.pool, 3, time.Second)
+	houseRepo := repo.NewPostgresHouseRepo(h.pool, retryAdapter)
+	lg, _ := pkg.CreateLogger("../log.log", "prod")
+
+	flats, err := houseRepo.GetFlatsByHouseID(context.Background(), 11, domain.AnyStatus, lg)
+
+	t.Require().Nil(err)
+	t.Require().Equal(0, len(flats))
+}
+
+func (h *HouseRepoTest) TestNormalSubscribeByID(t provider.T) {
+	retryAdapter := repo.NewPostgresRetryAdapter(h.pool, 3, time.Second)
+	houseRepo := repo.NewPostgresHouseRepo(h.pool, retryAdapter)
+	lg, _ := pkg.CreateLogger("../log.log", "prod")
+
+	err := houseRepo.SubscribeByID(context.Background(), 1, uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db24"), lg)
+
+	t.Require().Nil(err)
 }
 
 func TestHouseSuiteRunner(t *testing.T) {

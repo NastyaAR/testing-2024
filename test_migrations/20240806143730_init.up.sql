@@ -164,9 +164,9 @@ values (10, 1, '019126ee-2b7d-758e-bb22-fe2e45b2db22', 100, 2, 'created');
 INSERT INTO flats (flat_id, house_id, user_id, price, rooms, status) VALUES
 (1, 1, '019126ee-2b7d-758e-bb22-fe2e45b2db22', 100, 2, 'created'),
 (2, 1, '019126ee-2b7d-758e-bb22-fe2e45b2db24', 150, 3, 'approved'),
-(3, 2, '019126ee-2b7d-758e-bb22-fe2e45b2db24', 200, 2, 'declined'),
+(3, 1, '019126ee-2b7d-758e-bb22-fe2e45b2db24', 200, 2, 'declined'),
 (4, 2, '019126ee-2b7d-758e-bb22-fe2e45b2db25', 250, 4, 'on moderation'),
-(5, 3, '019126ee-2b7d-758e-bb22-fe2e45b2db26', 300, 1, 'created'),
+(5, 2, '019126ee-2b7d-758e-bb22-fe2e45b2db26', 300, 1, 'created'),
 (6, 3, '019126ee-2b7d-758e-bb22-fe2e45b2db27', 350, 2, 'approved'),
 (7, 4, '019126ee-2b7d-758e-bb22-fe2e45b2db28', 400, 3, 'declined'),
 (8, 4, '019126ee-2b7d-758e-bb22-fe2e45b2db29', 450, 4, 'on moderation'),

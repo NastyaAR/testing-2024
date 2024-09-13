@@ -34,8 +34,8 @@ func (p *PostgresUserRepo) Create(ctx context.Context, user *domain.User, lg *za
 	return nil
 }
 
-func (p *PostgresUserRepo) DeleteByID(ctx context.Context, id string, lg *zap.Logger) error {
-	lg.Info("delete user", zap.String("user_id", id))
+func (p *PostgresUserRepo) DeleteByID(ctx context.Context, id uuid.UUID, lg *zap.Logger) error {
+	lg.Info("delete user", zap.String("user_id", id.String()))
 
 	query := `delete from users where user_id=$1`
 	_, err := p.db.Exec(ctx, query, id)
@@ -53,7 +53,7 @@ func (p *PostgresUserRepo) Update(ctx context.Context, newUserData *domain.User,
 	query := `update users set user_id=$1,	
 			mail=$2,
 			password=$3,
-			role=$4`
+			role=$4 where user_id=$1`
 	_, err := p.db.Exec(ctx, query, newUserData.UserID, newUserData.Mail,
 		newUserData.Password, newUserData.Role)
 	if err != nil {

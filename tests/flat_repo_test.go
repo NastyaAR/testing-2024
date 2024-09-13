@@ -13,7 +13,7 @@ import (
 	"github.com/ozontech/allure-go/pkg/framework/provider"
 	"github.com/ozontech/allure-go/pkg/framework/suite"
 	"log"
-	"sync"
+	"math/rand"
 	"testing"
 	"time"
 )
@@ -22,7 +22,6 @@ type FlatRepoTest struct {
 	suite.Suite
 	pool     *pgxpool.Pool
 	migrator *migrate.Migrate
-	mtx      sync.Mutex
 }
 
 func (f *FlatRepoTest) BeforeAll(t provider.T) {
@@ -37,28 +36,13 @@ func (f *FlatRepoTest) BeforeAll(t provider.T) {
 	}
 
 	f.migrator, err = migrate.New("file://../test_migrations", connString)
+	f.migrator.Up()
 }
 
-func (s *FlatRepoTest) BeforeEach(t provider.T) {
-	t.Log("Up Migration")
-	s.mtx.Lock()
-	err := s.migrator.Up()
-	s.mtx.Unlock()
-	t.Log(err)
-}
-
-func (s *FlatRepoTest) AfterEach(t provider.T) {
-	t.Log("Down Migration")
-	s.mtx.Lock()
-	err := s.migrator.Down()
-	s.mtx.Unlock()
-	t.Log(err)
-}
-
-func (s *FlatRepoTest) AfterAll(t provider.T) {
+func (f *FlatRepoTest) AfterAll(t provider.T) {
 	t.Log("Close database connection")
-	s.pool.Close()
-
+	f.migrator.Down()
+	f.pool.Close()
 }
 
 func (f *FlatRepoTest) TestNormalCreateFlat(t provider.T) {
@@ -68,8 +52,8 @@ func (f *FlatRepoTest) TestNormalCreateFlat(t provider.T) {
 
 	userID, _ := uuid.Parse("019126ee-2b7d-758e-bb22-fe2e45b2db22")
 	flat := domain.Flat{
-		ID:          101,
-		HouseID:     1,
+		ID:          rand.Intn(100) + 20,
+		HouseID:     3,
 		UserID:      userID,
 		Price:       10000000,
 		Rooms:       2,
@@ -79,7 +63,7 @@ func (f *FlatRepoTest) TestNormalCreateFlat(t provider.T) {
 
 	flat, err := flatRepo.Create(context.Background(), &flat, lg)
 
-	actual, _ := flatRepo.GetByID(context.Background(), 101, 1, lg)
+	actual, _ := flatRepo.GetByID(context.Background(), flat.ID, flat.HouseID, lg)
 	t.Require().Nil(err)
 	t.Require().Equal(flat, actual)
 }
@@ -112,11 +96,23 @@ func (f *FlatRepoTest) TestNormalDeleteByIdFlat(t provider.T) {
 	flatRepo := repo.NewPostgresFlatRepo(f.pool, retryAdapter)
 	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
-	err := flatRepo.DeleteByID(context.Background(), 2, 1, lg)
+	userID, _ := uuid.Parse("019126ee-2b7d-758e-bb22-fe2e45b2db22")
+	flat := domain.Flat{
+		ID:          190,
+		HouseID:     3,
+		UserID:      userID,
+		Price:       10000000,
+		Rooms:       2,
+		Status:      domain.CreatedStatus,
+		ModeratorID: 1,
+	}
+
+	createdFlat, _ := flatRepo.Create(context.Background(), &flat, lg)
+
+	err := flatRepo.DeleteByID(context.Background(), createdFlat.ID, createdFlat.HouseID, lg)
 
 	t.Require().Nil(err)
-	flat, _ := flatRepo.GetByID(context.Background(), 2, 1, lg)
-
+	flat, _ = flatRepo.GetByID(context.Background(), createdFlat.ID, createdFlat.HouseID, lg)
 	t.Require().Equal(domain.Flat{}, flat)
 }
 
@@ -205,4 +201,5 @@ func (f *FlatRepoTest) TestContextTimeoutGetAllFlat(t provider.T) {
 
 func TestFlatSuiteRunner(t *testing.T) {
 	suite.RunSuite(t, new(FlatRepoTest))
+	suite.RunSuite(t, new(HouseRepoTest))
 }
