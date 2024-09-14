@@ -201,5 +201,4 @@ func (f *FlatRepoTest) TestContextTimeoutGetAllFlat(t provider.T) {
 
 func TestFlatSuiteRunner(t *testing.T) {
 	suite.RunSuite(t, new(FlatRepoTest))
-	suite.RunSuite(t, new(HouseRepoTest))
 }
