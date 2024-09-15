@@ -21,7 +21,7 @@ type HouseRepoTest struct {
 	migrator *migrate.Migrate
 }
 
-func isEqualHouses(expected *domain.House, actual *domain.House) bool {
+func IsEqualHouses(expected *domain.House, actual *domain.House) bool {
 	return (expected.Developer == actual.Developer &&
 		expected.Address == actual.Address && expected.ConstructYear == actual.ConstructYear)
 }
@@ -65,7 +65,7 @@ func (h *HouseRepoTest) TestNormalCreateHouse(t provider.T) {
 	created, err := houseRepo.Create(context.Background(), &house, lg)
 
 	t.Require().Nil(err)
-	t.Require().Equal(true, isEqualHouses(&house, &created))
+	t.Require().Equal(true, IsEqualHouses(&house, &created))
 	houseRepo.DeleteByID(context.Background(), created.HouseID, lg)
 }
 
@@ -252,7 +252,7 @@ func (h *HouseRepoTest) TestNormalGetAll(t provider.T) {
 
 	t.Require().Nil(err)
 	for i := 0; i < len(houses); i++ {
-		t.Require().Equal(true, isEqualHouses(&houses[i], &actualHouses[i]))
+		t.Require().Equal(true, IsEqualHouses(&houses[i], &actualHouses[i]))
 	}
 }
 
@@ -285,7 +285,7 @@ func (h *HouseRepoTest) TestNormalOffsetGetAll(t provider.T) {
 
 	t.Require().Nil(err)
 	for i := 0; i < len(houses); i++ {
-		t.Require().Equal(true, isEqualHouses(&houses[i], &actualHouses[i]))
+		t.Require().Equal(true, IsEqualHouses(&houses[i], &actualHouses[i]))
 	}
 }
 

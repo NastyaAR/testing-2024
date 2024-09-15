@@ -8,12 +8,14 @@ import (
 	"time"
 )
 
-const FlatThreshhold = 3
+const FlatThreshhold = 10
 
 var (
-	ErrHouse_BadRequest = errors.New("bad house request for create")
-	ErrHouse_BadID      = errors.New("bad house id")
-	ErrHouse_BadYear    = errors.New("bad house construct year")
+	ErrHouse_BadRequest   = errors.New("bad house request for create")
+	ErrHouse_BadID        = errors.New("bad house id")
+	ErrHouse_BadYear      = errors.New("bad house construct year")
+	ErrHouse_BadDeveloper = errors.New("bad house developer")
+	ErrHouse_BadAddress   = errors.New("bad house address")
 )
 
 type House struct {

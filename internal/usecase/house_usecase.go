@@ -39,9 +39,21 @@ func (u *HouseUsecase) Create(ctx context.Context, req *domain.CreateHouseReques
 	}
 
 	if req.Year < 0 {
-		lg.Warn("house usecase: create errorL bad house year", zap.Int("year", req.Year))
+		lg.Warn("house usecase: create error: bad house year", zap.Int("year", req.Year))
 		return domain.CreateHouseResponse{},
 			fmt.Errorf("house usecase: create error: %w", domain.ErrHouse_BadYear)
+	}
+
+	if req.Developer == "" {
+		lg.Warn("house usecase: create error: bad house developer", zap.String("developer", req.Developer))
+		return domain.CreateHouseResponse{},
+			fmt.Errorf("house usecase: create error: %w", domain.ErrHouse_BadDeveloper)
+	}
+
+	if req.Address == "" {
+		lg.Warn("house usecase: create error: bad house address", zap.String("address", req.Address))
+		return domain.CreateHouseResponse{},
+			fmt.Errorf("house usecase: create error: %w", domain.ErrHouse_BadAddress)
 	}
 
 	date := time.Now()
@@ -164,6 +176,11 @@ func (uc *HouseUsecase) SubscribeByID(ctx context.Context, id int, userID uuid.U
 	if id < 0 {
 		lg.Warn("house usecase: subscribe by id error: bad id", zap.Int("house_id", id))
 		return fmt.Errorf("house usecase: suscribe by id error: %w", domain.ErrHouse_BadID)
+	}
+
+	if userID == uuid.Nil {
+		lg.Warn("house usecase: subscribe by id error: bad user id", zap.Any("user_id", userID))
+		return fmt.Errorf("house usecase: subscribe by id error: %w", domain.ErrUser_BadId)
 	}
 
 	err := uc.houseRepo.SubscribeByID(ctx, id, userID, lg)

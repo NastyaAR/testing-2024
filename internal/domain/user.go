@@ -18,10 +18,11 @@ var (
 )
 
 var (
-	ErrUser_BadType     = errors.New("bd user type")
+	ErrUser_BadType     = errors.New("bad user type")
 	ErrUser_BadRequest  = errors.New("bad nil request")
 	ErrUser_BadMail     = errors.New("bad mail")
 	ErrUser_BadPassword = errors.New("bad password")
+	ErrUser_BadId       = errors.New("bad user id ")
 )
 
 type User struct {
