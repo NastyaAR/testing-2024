@@ -274,6 +274,14 @@ func (h *HouseUsecaseTest) TestBadRepoCallSubscribeByID(t provider.T) {
 	t.Require().Error(err)
 }
 
+func (h *HouseUsecaseTest) TestNormalNotifying(t provider.T) {
+	notifySender := ports.NewSender()
+	done := make(chan bool, 1)
+	_ = usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Minute, time.Minute, h.lg)
+
+	h.notifyRepoMock.EXPECT().GetNoSendNotifies(gomock.Any(), h.lg).Times(1).Return(nil, nil)
+}
+
 func TestHouseUsecaseSuiteRunner(t *testing.T) {
 	suite.RunSuite(t, new(HouseUsecaseTest))
 }

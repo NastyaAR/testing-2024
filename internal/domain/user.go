@@ -63,7 +63,7 @@ type UserUsecase interface {
 
 type UserRepo interface {
 	Create(ctx context.Context, user *User, lg *zap.Logger) error
-	DeleteByID(ctx context.Context, id string, lg *zap.Logger) error
+	DeleteByID(ctx context.Context, id uuid.UUID, lg *zap.Logger) error
 	Update(ctx context.Context, newUserData *User, lg *zap.Logger) error
 	GetByID(ctx context.Context, id uuid.UUID, lg *zap.Logger) (User, error)
 	GetAll(ctx context.Context, offset int, limit int, lg *zap.Logger) ([]User, error)
