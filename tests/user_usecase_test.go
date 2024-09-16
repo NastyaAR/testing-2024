@@ -104,18 +104,17 @@ func (u *UserUsecaseTest) TestBadRepoCallRegister(t provider.T) {
 
 func (u *UserUsecaseTest) TestNormalLogin(t provider.T) {
 	userUsecase := usecase.NewUserUsecase(u.userRepoMock)
+	clientBuilder := NormalClientUserBuilder{}
 
-	uid := uuid.New()
-	usr := domain.User{
-		UserID:   uid,
-		Mail:     "test@mail.ru",
-		Password: "$2a$10$uKeo8Mj.unKogJ6rV138heK1J/x./xqA97cVTepiq7evt9sER8EPG",
-		Role:     domain.Client,
-	}
+	clientBuilder.SetRole()
+	clientBuilder.SetMail()
+	clientBuilder.SetPassword()
+	clientBuilder.SetUid("019126ee-2b7d-758e-bb22-fe2e45b2db40")
+	usr := clientBuilder.GetUser()
 
 	req := domain.LoginUserRequest{
-		ID:       uid,
-		Password: "mysecretpassword",
+		ID:       usr.UserID,
+		Password: "password",
 	}
 
 	u.userRepoMock.EXPECT().GetByID(context.Background(), req.ID, u.lg).Return(usr, nil)
@@ -127,18 +126,17 @@ func (u *UserUsecaseTest) TestNormalLogin(t provider.T) {
 
 func (u *UserUsecaseTest) TestBadPasswordLogin(t provider.T) {
 	userUsecase := usecase.NewUserUsecase(u.userRepoMock)
+	clientBuilder := NormalClientUserBuilder{}
 
-	uid := uuid.New()
-	usr := domain.User{
-		UserID:   uid,
-		Mail:     "test@mail.ru",
-		Password: "$2a$10$uKeo8Mj.unKogJ6rV138heK1J/x./xqA97cVTepiq7evt9sER8EPG",
-		Role:     domain.Client,
-	}
+	clientBuilder.SetRole()
+	clientBuilder.SetMail()
+	clientBuilder.SetPassword()
+	clientBuilder.SetUid("019126ee-2b7d-758e-bb22-fe2e45b2db40")
+	usr := clientBuilder.GetUser()
 
 	req := domain.LoginUserRequest{
-		ID:       uid,
-		Password: "password",
+		ID:       usr.UserID,
+		Password: "badpassword",
 	}
 
 	u.userRepoMock.EXPECT().GetByID(context.Background(), req.ID, u.lg).Return(usr, nil)
