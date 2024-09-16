@@ -36,12 +36,18 @@ func (f *FlatRepoTest) BeforeAll(t provider.T) {
 	}
 
 	f.migrator, err = migrate.New("file://../test_migrations", connString)
-	f.migrator.Up()
+	err = f.migrator.Up()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (f *FlatRepoTest) AfterAll(t provider.T) {
 	t.Log("Close database connection")
-	f.migrator.Down()
+	err := f.migrator.Down()
+	if err != nil {
+		log.Fatal(err)
+	}
 	f.pool.Close()
 }
 

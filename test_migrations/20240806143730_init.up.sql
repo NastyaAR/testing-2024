@@ -140,13 +140,10 @@ insert into houses (address, construct_year, developer, create_house_date, updat
 ('ул. Спортивная, д. 9', 2022, 'ООО Комфорт', now(), now()),
 ('ул. Спортивная, д. 10', 2018, 'ИП СтройПроект', now(), now());
 
-insert into users(user_id, mail, password, role)
-values ('019126ee-2b7d-758e-bb22-fe2e45b2db22', 'test@mail.ru', 'password', 'client');
-
-insert into users(user_id, mail, password, role)
-values ('019126ee-2b7d-758e-bb22-fe2e45b2db23', 'test@mail.ru', 'password', 'moderator');
 
 INSERT INTO users (user_id, mail, password, role) VALUES
+('019126ee-2b7d-758e-bb22-fe2e45b2db22', 'test@mail.ru', 'password', 'client'),
+('019126ee-2b7d-758e-bb22-fe2e45b2db23', 'test@mail.ru', 'password', 'moderator'),
 ('019126ee-2b7d-758e-bb22-fe2e45b2db24', 'user1@mail.ru', 'password1', 'client'),
 ('019126ee-2b7d-758e-bb22-fe2e45b2db30', 'user2@mail.ru', 'password2', 'moderator'),
 ('019126ee-2b7d-758e-bb22-fe2e45b2db25', 'user3@mail.ru', 'password3', 'client'),

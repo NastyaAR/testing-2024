@@ -83,7 +83,7 @@ func (p *PostgresUserRepo) GetByID(ctx context.Context, id uuid.UUID, lg *zap.Lo
 func (p *PostgresUserRepo) GetAll(ctx context.Context, offset int, limit int, lg *zap.Logger) ([]domain.User, error) {
 	lg.Info("get users", zap.Int("offset", offset), zap.Int("limit", limit))
 
-	query := `select * from users limit $1 offset $2`
+	query := `select * from users order by user_id limit $1 offset $2`
 	rows, err := p.db.Query(ctx, query, limit, offset)
 	defer rows.Close()
 	if err != nil {

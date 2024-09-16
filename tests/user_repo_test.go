@@ -33,12 +33,18 @@ func (u *UserRepoTest) BeforeAll(t provider.T) {
 	}
 
 	u.migrator, err = migrate.New("file://../test_migrations", connString)
-	u.migrator.Up()
+	err = u.migrator.Up()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (u *UserRepoTest) AfterAll(t provider.T) {
 	t.Log("Close database connection")
-	u.migrator.Down()
+	err := u.migrator.Down()
+	if err != nil {
+		log.Fatal(err)
+	}
 	u.pool.Close()
 }
 
@@ -132,7 +138,7 @@ func (u *UserRepoTest) TestNormalUpdateUser(t provider.T) {
 	userRepo := repo.NewPostrgesUserRepo(u.pool, retryAdapter)
 	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
-	userID := uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db24")
+	userID := uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db27")
 	user := domain.User{
 		UserID:   userID,
 		Mail:     "newmail@mail.ru",
@@ -239,15 +245,15 @@ func (u *UserRepoTest) TestNormalGetAllUser(t provider.T) {
 			Role:     "client",
 		},
 		{
-			UserID:   uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db30"),
-			Mail:     "user2@mail.ru",
-			Password: "password2",
-			Role:     "moderator",
-		},
-		{
 			UserID:   uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db25"),
 			Mail:     "user3@mail.ru",
 			Password: "password3",
+			Role:     "client",
+		},
+		{
+			UserID:   uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db26"),
+			Mail:     "user6@mail.ru",
+			Password: "password6",
 			Role:     "client",
 		}}
 

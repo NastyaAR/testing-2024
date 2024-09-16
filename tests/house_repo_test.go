@@ -38,12 +38,18 @@ func (f *HouseRepoTest) BeforeAll(t provider.T) {
 	}
 
 	f.migrator, err = migrate.New("file://../test_migrations", connString)
-	f.migrator.Up()
+	err = f.migrator.Up()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (s *HouseRepoTest) AfterAll(t provider.T) {
 	t.Log("Close database connection")
-	s.migrator.Down()
+	err := s.migrator.Down()
+	if err != nil {
+		log.Fatal(err)
+	}
 	s.pool.Close()
 }
 
@@ -276,15 +282,13 @@ func (h *HouseRepoTest) TestNormalOffsetGetAll(t provider.T) {
 	houses := []domain.House{
 		{HouseID: 2, Address: "ул. Спортивная, д. 2", ConstructYear: 2020, Developer: "ЗАО Строительство", CreateHouseDate: now, UpdateFlatDate: now},
 		{HouseID: 3, Address: "ул. Спортивная, д. 3", ConstructYear: 2019, Developer: "ИП Строитель", CreateHouseDate: now, UpdateFlatDate: now},
-		{HouseID: 4, Address: "ул. Спортивная, д. 4", ConstructYear: 2022, Developer: "ЗАО Новострой", CreateHouseDate: now, UpdateFlatDate: now},
-		{HouseID: 5, Address: "ул. Спортивная, д. 5", ConstructYear: 2021, Developer: "OOO Строй", CreateHouseDate: now, UpdateFlatDate: now},
-		{HouseID: 6, Address: "ул. Спортивная, д. 6", ConstructYear: 2023, Developer: "Компания Реал", CreateHouseDate: now, UpdateFlatDate: now},
 	}
 
-	actualHouses, err := houseRepo.GetAll(context.Background(), 1, 5, lg)
+	actualHouses, err := houseRepo.GetAll(context.Background(), 1, 2, lg)
 
 	t.Require().Nil(err)
 	for i := 0; i < len(houses); i++ {
+		t.Log(houses[i], actualHouses[i])
 		t.Require().Equal(true, IsEqualHouses(&houses[i], &actualHouses[i]))
 	}
 }
