@@ -18,14 +18,14 @@ import (
 type FlatUsecaseTest struct {
 	suite.Suite
 	flatRepoMock *mock_domain.MockFlatRepo
-	lg           *zap.Logger
+	mockLg       *zap.Logger
 }
 
 func (f *FlatUsecaseTest) BeforeAll(t provider.T) {
 	t.Log("Init mock")
 	ctrl := gomock.NewController(t)
 	f.flatRepoMock = mock_domain.NewMockFlatRepo(ctrl)
-	f.lg, _ = pkg.CreateLogger("../log.log", "prod")
+	f.mockLg = pkg.CreateMockLogger()
 }
 
 func (f *FlatUsecaseTest) TestNormalCreateFlat(t provider.T) {
@@ -54,9 +54,9 @@ func (f *FlatUsecaseTest) TestNormalCreateFlat(t provider.T) {
 		Status:  domain.CreatedStatus,
 	}
 
-	f.flatRepoMock.EXPECT().Create(gomock.Any(), &flat, f.lg).Return(flat, nil)
+	f.flatRepoMock.EXPECT().Create(gomock.Any(), &flat, f.mockLg).Return(flat, nil)
 
-	created, err := userUsecase.Create(context.Background(), userID, &req, f.lg)
+	created, err := userUsecase.Create(context.Background(), userID, &req, f.mockLg)
 
 	t.Require().Nil(err)
 	t.Require().Equal(resp, created)
@@ -64,7 +64,7 @@ func (f *FlatUsecaseTest) TestNormalCreateFlat(t provider.T) {
 
 func (f *FlatUsecaseTest) TestEmptyRequestCreateFlat(t provider.T) {
 	userUsecase := usecase.NewFlatUsecase(f.flatRepoMock)
-	created, err := userUsecase.Create(context.Background(), uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db28"), nil, f.lg)
+	created, err := userUsecase.Create(context.Background(), uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db28"), nil, f.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.CreateFlatResponse{}, created)
@@ -79,7 +79,7 @@ func (f *FlatUsecaseTest) TestBadFlatIDCreateFlat(t provider.T) {
 		Rooms:   2,
 	}
 
-	created, err := userUsecase.Create(context.Background(), uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db28"), &req, f.lg)
+	created, err := userUsecase.Create(context.Background(), uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db28"), &req, f.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.CreateFlatResponse{}, created)
@@ -94,7 +94,7 @@ func (f *FlatUsecaseTest) TestBadHouseIDCreateFlat(t provider.T) {
 		Rooms:   2,
 	}
 
-	created, err := userUsecase.Create(context.Background(), uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db28"), &req, f.lg)
+	created, err := userUsecase.Create(context.Background(), uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db28"), &req, f.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.CreateFlatResponse{}, created)
@@ -109,7 +109,7 @@ func (f *FlatUsecaseTest) TestBadRoomsCreateFlat(t provider.T) {
 		Rooms:   0,
 	}
 
-	created, err := userUsecase.Create(context.Background(), uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db28"), &req, f.lg)
+	created, err := userUsecase.Create(context.Background(), uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db28"), &req, f.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.CreateFlatResponse{}, created)
@@ -134,9 +134,9 @@ func (f *FlatUsecaseTest) TestBadRepoCallCreateFlat(t provider.T) {
 		Rooms:   2,
 	}
 
-	f.flatRepoMock.EXPECT().Create(gomock.Any(), &flat, f.lg).Return(domain.Flat{}, errors.New("flat repo error"))
+	f.flatRepoMock.EXPECT().Create(gomock.Any(), &flat, f.mockLg).Return(domain.Flat{}, errors.New("flat repo error"))
 
-	created, err := userUsecase.Create(context.Background(), userID, &req, f.lg)
+	created, err := userUsecase.Create(context.Background(), userID, &req, f.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.CreateFlatResponse{}, created)
@@ -162,9 +162,9 @@ func (f *FlatUsecaseTest) TestNormalUpdateFlat(t provider.T) {
 		Status:  domain.ModeratingStatus,
 	}
 
-	f.flatRepoMock.EXPECT().Update(gomock.Any(), userID, &flat, f.lg).Return(flat, nil)
+	f.flatRepoMock.EXPECT().Update(gomock.Any(), userID, &flat, f.mockLg).Return(flat, nil)
 
-	upd, err := userUsecase.Update(context.Background(), userID, &req, f.lg)
+	upd, err := userUsecase.Update(context.Background(), userID, &req, f.mockLg)
 
 	t.Require().Nil(err)
 	t.Require().Equal(resp, upd)
@@ -180,7 +180,7 @@ func (f *FlatUsecaseTest) TestBadStatusUpdateFlat(t provider.T) {
 		Status:  "bla bla",
 	}
 
-	upd, err := userUsecase.Update(context.Background(), userID, &req, f.lg)
+	upd, err := userUsecase.Update(context.Background(), userID, &req, f.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.CreateFlatResponse{}, upd)
@@ -203,9 +203,9 @@ func (f *FlatUsecaseTest) TestBadRepoCallUpdateFlat(t provider.T) {
 		Status:  domain.ApprovedStatus,
 	}
 
-	f.flatRepoMock.EXPECT().Update(gomock.Any(), userID, &flat, f.lg).Return(domain.Flat{}, errors.New("flat repo error"))
+	f.flatRepoMock.EXPECT().Update(gomock.Any(), userID, &flat, f.mockLg).Return(domain.Flat{}, errors.New("flat repo error"))
 
-	created, err := userUsecase.Update(context.Background(), userID, &req, f.lg)
+	created, err := userUsecase.Update(context.Background(), userID, &req, f.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.CreateFlatResponse{}, created)

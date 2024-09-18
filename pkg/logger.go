@@ -25,6 +25,10 @@ func CreateLogger(filepath, stage string) (*zap.Logger, error) {
 	return zap.New(cores), nil
 }
 
+func CreateMockLogger() *zap.Logger {
+	return zap.NewNop()
+}
+
 func createConsoleCore(stage string) (zapcore.Core, error) {
 	stdout := zapcore.AddSync(os.Stdout)
 	cfg := zap.NewProductionEncoderConfig()

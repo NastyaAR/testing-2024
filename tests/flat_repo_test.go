@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ozontech/allure-go/pkg/framework/provider"
 	"github.com/ozontech/allure-go/pkg/framework/suite"
+	"go.uber.org/zap"
 	"log"
 	"math/rand"
 	"testing"
@@ -22,6 +23,7 @@ type FlatRepoTest struct {
 	suite.Suite
 	pool     *pgxpool.Pool
 	migrator *migrate.Migrate
+	mockLg   *zap.Logger
 }
 
 func (f *FlatRepoTest) BeforeAll(t provider.T) {
@@ -40,6 +42,8 @@ func (f *FlatRepoTest) BeforeAll(t provider.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	f.mockLg = pkg.CreateMockLogger()
 }
 
 func (f *FlatRepoTest) AfterAll(t provider.T) {
@@ -54,7 +58,6 @@ func (f *FlatRepoTest) AfterAll(t provider.T) {
 func (f *FlatRepoTest) TestNormalCreateFlat(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(f.pool, 3, time.Second)
 	flatRepo := repo.NewPostgresFlatRepo(f.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
 	userID, _ := uuid.Parse("019126ee-2b7d-758e-bb22-fe2e45b2db22")
 	flat := domain.Flat{
@@ -67,9 +70,9 @@ func (f *FlatRepoTest) TestNormalCreateFlat(t provider.T) {
 		ModeratorID: 1,
 	}
 
-	flat, err := flatRepo.Create(context.Background(), &flat, lg)
+	flat, err := flatRepo.Create(context.Background(), &flat, f.mockLg)
 
-	actual, _ := flatRepo.GetByID(context.Background(), flat.ID, flat.HouseID, lg)
+	actual, _ := flatRepo.GetByID(context.Background(), flat.ID, flat.HouseID, f.mockLg)
 	t.Require().Nil(err)
 	t.Require().Equal(flat, actual)
 }
@@ -77,7 +80,6 @@ func (f *FlatRepoTest) TestNormalCreateFlat(t provider.T) {
 func (f *FlatRepoTest) TestContextTimeoutCreateFlat(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(f.pool, 1, time.Second)
 	flatRepo := repo.NewPostgresFlatRepo(f.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
 	userID, _ := uuid.Parse("019126ee-2b7d-758e-bb22-fe2e45b2db22")
 	flat := domain.Flat{
@@ -92,7 +94,7 @@ func (f *FlatRepoTest) TestContextTimeoutCreateFlat(t provider.T) {
 	ctx, _ := context.WithTimeout(context.Background(), time.Millisecond)
 	time.Sleep(time.Millisecond)
 
-	flat, err := flatRepo.Create(ctx, &flat, lg)
+	flat, err := flatRepo.Create(ctx, &flat, f.mockLg)
 
 	t.Require().Error(err)
 }
@@ -100,7 +102,6 @@ func (f *FlatRepoTest) TestContextTimeoutCreateFlat(t provider.T) {
 func (f *FlatRepoTest) TestNormalDeleteByIdFlat(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(f.pool, 3, time.Second)
 	flatRepo := repo.NewPostgresFlatRepo(f.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
 	userID, _ := uuid.Parse("019126ee-2b7d-758e-bb22-fe2e45b2db22")
 	flat := domain.Flat{
@@ -113,24 +114,23 @@ func (f *FlatRepoTest) TestNormalDeleteByIdFlat(t provider.T) {
 		ModeratorID: 1,
 	}
 
-	createdFlat, _ := flatRepo.Create(context.Background(), &flat, lg)
+	createdFlat, _ := flatRepo.Create(context.Background(), &flat, f.mockLg)
 
-	err := flatRepo.DeleteByID(context.Background(), createdFlat.ID, createdFlat.HouseID, lg)
+	err := flatRepo.DeleteByID(context.Background(), createdFlat.ID, createdFlat.HouseID, f.mockLg)
 
 	t.Require().Nil(err)
-	flat, _ = flatRepo.GetByID(context.Background(), createdFlat.ID, createdFlat.HouseID, lg)
+	flat, _ = flatRepo.GetByID(context.Background(), createdFlat.ID, createdFlat.HouseID, f.mockLg)
 	t.Require().Equal(domain.Flat{}, flat)
 }
 
 func (f *FlatRepoTest) TestContextTimeoutDeleteByIdFlat(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(f.pool, 3, time.Second)
 	flatRepo := repo.NewPostgresFlatRepo(f.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
 	ctx, _ := context.WithTimeout(context.Background(), time.Millisecond)
 	time.Sleep(time.Millisecond)
 
-	err := flatRepo.DeleteByID(ctx, 1, 1, lg)
+	err := flatRepo.DeleteByID(ctx, 1, 1, f.mockLg)
 
 	t.Require().Error(err)
 }
@@ -138,7 +138,6 @@ func (f *FlatRepoTest) TestContextTimeoutDeleteByIdFlat(t provider.T) {
 func (f *FlatRepoTest) TestNormalGetByIdFlat(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(f.pool, 3, time.Second)
 	flatRepo := repo.NewPostgresFlatRepo(f.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
 	userID, _ := uuid.Parse("019126ee-2b7d-758e-bb22-fe2e45b2db22")
 	flat := domain.Flat{
@@ -151,7 +150,7 @@ func (f *FlatRepoTest) TestNormalGetByIdFlat(t provider.T) {
 		ModeratorID: 0,
 	}
 
-	flat, err := flatRepo.GetByID(context.Background(), 1, 1, lg)
+	flat, err := flatRepo.GetByID(context.Background(), 1, 1, f.mockLg)
 
 	t.Require().Nil(err)
 	t.Require().Equal(flat, flat)
@@ -160,11 +159,10 @@ func (f *FlatRepoTest) TestNormalGetByIdFlat(t provider.T) {
 func (f *FlatRepoTest) TestContextTimeoutGetByIdFlat(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(f.pool, 3, time.Second)
 	flatRepo := repo.NewPostgresFlatRepo(f.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 	ctx, _ := context.WithTimeout(context.Background(), time.Millisecond)
 	time.Sleep(time.Millisecond)
 
-	flat, err := flatRepo.GetByID(ctx, 1, 1, lg)
+	flat, err := flatRepo.GetByID(ctx, 1, 1, f.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.Flat{}, flat)
@@ -173,9 +171,8 @@ func (f *FlatRepoTest) TestContextTimeoutGetByIdFlat(t provider.T) {
 func (f *FlatRepoTest) TestNormalGetAllFlat(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(f.pool, 3, time.Second)
 	flatRepo := repo.NewPostgresFlatRepo(f.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
-	flats, err := flatRepo.GetAll(context.Background(), 0, 10, lg)
+	flats, err := flatRepo.GetAll(context.Background(), 0, 10, f.mockLg)
 
 	t.Require().Nil(err)
 	t.Require().Equal(10, len(flats))
@@ -184,9 +181,8 @@ func (f *FlatRepoTest) TestNormalGetAllFlat(t provider.T) {
 func (f *FlatRepoTest) TestNormalOutOfRangeGetAllFlat(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(f.pool, 3, time.Second)
 	flatRepo := repo.NewPostgresFlatRepo(f.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
-	flats, err := flatRepo.GetAll(context.Background(), 20, 10, lg)
+	flats, err := flatRepo.GetAll(context.Background(), 20, 10, f.mockLg)
 
 	t.Require().Nil(err)
 	t.Require().Equal(len(flats), 0)
@@ -195,11 +191,10 @@ func (f *FlatRepoTest) TestNormalOutOfRangeGetAllFlat(t provider.T) {
 func (f *FlatRepoTest) TestContextTimeoutGetAllFlat(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(f.pool, 3, time.Second)
 	flatRepo := repo.NewPostgresFlatRepo(f.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 	ctx, _ := context.WithTimeout(context.Background(), 1)
 	time.Sleep(1)
 
-	flats, err := flatRepo.GetAll(ctx, 1, 1, lg)
+	flats, err := flatRepo.GetAll(ctx, 1, 1, f.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(len(flats), 0)

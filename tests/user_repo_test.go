@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ozontech/allure-go/pkg/framework/provider"
 	"github.com/ozontech/allure-go/pkg/framework/suite"
+	"go.uber.org/zap"
 	"log"
 	"testing"
 	"time"
@@ -19,6 +20,7 @@ type UserRepoTest struct {
 	suite.Suite
 	pool     *pgxpool.Pool
 	migrator *migrate.Migrate
+	mockLg   *zap.Logger
 }
 
 func (u *UserRepoTest) BeforeAll(t provider.T) {
@@ -37,6 +39,7 @@ func (u *UserRepoTest) BeforeAll(t provider.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	u.mockLg = pkg.CreateMockLogger()
 }
 
 func (u *UserRepoTest) AfterAll(t provider.T) {
@@ -51,7 +54,6 @@ func (u *UserRepoTest) AfterAll(t provider.T) {
 func (u *UserRepoTest) TestNormalCreateUser(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(u.pool, 3, time.Second)
 	userRepo := repo.NewPostrgesUserRepo(u.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
 	userID := uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db40")
 	user := domain.User{
@@ -61,18 +63,17 @@ func (u *UserRepoTest) TestNormalCreateUser(t provider.T) {
 		Role:     domain.Client,
 	}
 
-	err := userRepo.Create(context.Background(), &user, lg)
+	err := userRepo.Create(context.Background(), &user, u.mockLg)
 
 	t.Require().Nil(err)
-	usr, _ := userRepo.GetByID(context.Background(), userID, lg)
+	usr, _ := userRepo.GetByID(context.Background(), userID, u.mockLg)
 	t.Require().Equal(user, usr)
-	userRepo.DeleteByID(context.Background(), userID, lg)
+	userRepo.DeleteByID(context.Background(), userID, u.mockLg)
 }
 
 func (u *UserRepoTest) TestExistsCreateUser(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(u.pool, 3, time.Second)
 	userRepo := repo.NewPostrgesUserRepo(u.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
 	userID := uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db24")
 	user := domain.User{
@@ -82,7 +83,7 @@ func (u *UserRepoTest) TestExistsCreateUser(t provider.T) {
 		Role:     domain.Client,
 	}
 
-	err := userRepo.Create(context.Background(), &user, lg)
+	err := userRepo.Create(context.Background(), &user, u.mockLg)
 
 	t.Require().Error(err)
 }
@@ -90,11 +91,10 @@ func (u *UserRepoTest) TestExistsCreateUser(t provider.T) {
 func (u *UserRepoTest) TestContextTimeoutCreateUser(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(u.pool, 3, time.Second)
 	userRepo := repo.NewPostrgesUserRepo(u.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 	ctx, _ := context.WithTimeout(context.Background(), 1)
 	time.Sleep(1)
 
-	err := userRepo.Create(ctx, &domain.User{}, lg)
+	err := userRepo.Create(ctx, &domain.User{}, u.mockLg)
 
 	t.Require().Error(err)
 }
@@ -102,7 +102,6 @@ func (u *UserRepoTest) TestContextTimeoutCreateUser(t provider.T) {
 func (u *UserRepoTest) TestNormalDeleteByID(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(u.pool, 3, time.Second)
 	userRepo := repo.NewPostrgesUserRepo(u.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
 	userID := uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db41")
 	user := domain.User{
@@ -111,24 +110,23 @@ func (u *UserRepoTest) TestNormalDeleteByID(t provider.T) {
 		Password: "password",
 		Role:     domain.Client,
 	}
-	_ = userRepo.Create(context.Background(), &user, lg)
+	_ = userRepo.Create(context.Background(), &user, u.mockLg)
 
-	err := userRepo.DeleteByID(context.Background(), userID, lg)
+	err := userRepo.DeleteByID(context.Background(), userID, u.mockLg)
 
 	t.Require().Nil(err)
-	usr, err := userRepo.GetByID(context.Background(), userID, lg)
+	usr, err := userRepo.GetByID(context.Background(), userID, u.mockLg)
 	t.Require().Equal(domain.User{}, usr)
 }
 
 func (u *UserRepoTest) TestContextTimeoutDeleteByID(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(u.pool, 3, time.Second)
 	userRepo := repo.NewPostrgesUserRepo(u.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 	ctx, _ := context.WithTimeout(context.Background(), 1)
 	time.Sleep(1)
 	userID := uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db41")
 
-	err := userRepo.DeleteByID(ctx, userID, lg)
+	err := userRepo.DeleteByID(ctx, userID, u.mockLg)
 
 	t.Require().Error(err)
 }
@@ -136,7 +134,6 @@ func (u *UserRepoTest) TestContextTimeoutDeleteByID(t provider.T) {
 func (u *UserRepoTest) TestNormalUpdateUser(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(u.pool, 3, time.Second)
 	userRepo := repo.NewPostrgesUserRepo(u.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
 	userID := uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db27")
 	user := domain.User{
@@ -146,17 +143,16 @@ func (u *UserRepoTest) TestNormalUpdateUser(t provider.T) {
 		Role:     domain.Client,
 	}
 
-	err := userRepo.Update(context.Background(), &user, lg)
+	err := userRepo.Update(context.Background(), &user, u.mockLg)
 
 	t.Require().Nil(err)
-	usr, _ := userRepo.GetByID(context.Background(), userID, lg)
+	usr, _ := userRepo.GetByID(context.Background(), userID, u.mockLg)
 	t.Require().Equal(user, usr)
 }
 
 func (u *UserRepoTest) TestContextTimeoutUpdateUser(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(u.pool, 3, time.Second)
 	userRepo := repo.NewPostrgesUserRepo(u.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 	ctx, _ := context.WithTimeout(context.Background(), 1)
 	time.Sleep(1)
 
@@ -168,7 +164,7 @@ func (u *UserRepoTest) TestContextTimeoutUpdateUser(t provider.T) {
 		Role:     domain.Client,
 	}
 
-	err := userRepo.Update(ctx, &user, lg)
+	err := userRepo.Update(ctx, &user, u.mockLg)
 
 	t.Require().Error(err)
 }
@@ -176,7 +172,6 @@ func (u *UserRepoTest) TestContextTimeoutUpdateUser(t provider.T) {
 func (u *UserRepoTest) TestNormalGetByIDUser(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(u.pool, 3, time.Second)
 	userRepo := repo.NewPostrgesUserRepo(u.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
 	userID := uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db24")
 	user := domain.User{
@@ -186,7 +181,7 @@ func (u *UserRepoTest) TestNormalGetByIDUser(t provider.T) {
 		Role:     domain.Client,
 	}
 
-	usr, err := userRepo.GetByID(context.Background(), userID, lg)
+	usr, err := userRepo.GetByID(context.Background(), userID, u.mockLg)
 
 	t.Require().Nil(err)
 	t.Require().Equal(user, usr)
@@ -195,11 +190,10 @@ func (u *UserRepoTest) TestNormalGetByIDUser(t provider.T) {
 func (u *UserRepoTest) TestNoExistsGetByIDUser(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(u.pool, 3, time.Second)
 	userRepo := repo.NewPostrgesUserRepo(u.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
 	userID := uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db44")
 
-	usr, err := userRepo.GetByID(context.Background(), userID, lg)
+	usr, err := userRepo.GetByID(context.Background(), userID, u.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.User{}, usr)
@@ -208,13 +202,12 @@ func (u *UserRepoTest) TestNoExistsGetByIDUser(t provider.T) {
 func (u *UserRepoTest) TestContextTimeoutGetByIDUser(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(u.pool, 3, time.Second)
 	userRepo := repo.NewPostrgesUserRepo(u.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 	ctx, _ := context.WithTimeout(context.Background(), 1)
 	time.Sleep(1)
 
 	userID := uuid.MustParse("019126ee-2b7d-758e-bb22-fe2e45b2db44")
 
-	usr, err := userRepo.GetByID(ctx, userID, lg)
+	usr, err := userRepo.GetByID(ctx, userID, u.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.User{}, usr)
@@ -223,7 +216,6 @@ func (u *UserRepoTest) TestContextTimeoutGetByIDUser(t provider.T) {
 func (u *UserRepoTest) TestNormalGetAllUser(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(u.pool, 3, time.Second)
 	userRepo := repo.NewPostrgesUserRepo(u.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 
 	expected := []domain.User{
 		{
@@ -257,7 +249,7 @@ func (u *UserRepoTest) TestNormalGetAllUser(t provider.T) {
 			Role:     "client",
 		}}
 
-	users, err := userRepo.GetAll(context.Background(), 0, 5, lg)
+	users, err := userRepo.GetAll(context.Background(), 0, 5, u.mockLg)
 
 	t.Require().Nil(err)
 	t.Require().Equal(expected, users)
@@ -266,11 +258,10 @@ func (u *UserRepoTest) TestNormalGetAllUser(t provider.T) {
 func (u *UserRepoTest) TestContextTimeoutGetAllUser(t provider.T) {
 	retryAdapter := repo.NewPostgresRetryAdapter(u.pool, 3, time.Second)
 	userRepo := repo.NewPostrgesUserRepo(u.pool, retryAdapter)
-	lg, _ := pkg.CreateLogger("../log.log", "prod")
 	ctx, _ := context.WithTimeout(context.Background(), 1)
 	time.Sleep(1)
 
-	users, err := userRepo.GetAll(ctx, 0, 5, lg)
+	users, err := userRepo.GetAll(ctx, 0, 5, u.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(0, len(users))

@@ -21,7 +21,7 @@ type HouseUsecaseTest struct {
 	suite.Suite
 	houseRepoMock  *mock_domain.MockHouseRepo
 	notifyRepoMock *mock_domain.MockNotifyRepo
-	lg             *zap.Logger
+	mockLg         *zap.Logger
 	flatMother     *FlatMother
 }
 
@@ -30,7 +30,7 @@ func (h *HouseUsecaseTest) BeforeAll(t provider.T) {
 	ctrl := gomock.NewController(t)
 	h.houseRepoMock = mock_domain.NewMockHouseRepo(ctrl)
 	h.notifyRepoMock = mock_domain.NewMockNotifyRepo(ctrl)
-	h.lg, _ = pkg.CreateLogger("../log.log", "prod")
+	h.mockLg = pkg.CreateMockLogger()
 	h.flatMother = new(FlatMother)
 }
 
@@ -38,7 +38,7 @@ func (h *HouseUsecaseTest) TestNormalCreateHouse(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
 	done <- true
-	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.lg)
+	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.mockLg)
 
 	req := domain.CreateHouseRequest{
 		HomeID:    2,
@@ -65,9 +65,9 @@ func (h *HouseUsecaseTest) TestNormalCreateHouse(t provider.T) {
 		UpdateFlatDate:  time.Time{},
 	}
 
-	h.houseRepoMock.EXPECT().Create(context.Background(), gomock.Any(), h.lg).Return(house, nil)
+	h.houseRepoMock.EXPECT().Create(context.Background(), gomock.Any(), h.mockLg).Return(house, nil)
 
-	created, err := houseUsecase.Create(context.Background(), &req, h.lg)
+	created, err := houseUsecase.Create(context.Background(), &req, h.mockLg)
 
 	t.Require().Nil(err)
 	t.Require().Equal(resp.HomeID, created.HomeID)
@@ -80,9 +80,9 @@ func (h *HouseUsecaseTest) TestNilRequestCreateHouse(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
 	done <- true
-	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.lg)
+	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.mockLg)
 
-	created, err := houseUsecase.Create(context.Background(), nil, h.lg)
+	created, err := houseUsecase.Create(context.Background(), nil, h.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.CreateHouseResponse{}, created)
@@ -92,7 +92,7 @@ func (h *HouseUsecaseTest) TestBadYearCreateHouse(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
 	done <- true
-	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.lg)
+	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.mockLg)
 
 	req := domain.CreateHouseRequest{
 		HomeID:    0,
@@ -101,7 +101,7 @@ func (h *HouseUsecaseTest) TestBadYearCreateHouse(t provider.T) {
 		Developer: "ООО ТестСтрой",
 	}
 
-	created, err := houseUsecase.Create(context.Background(), &req, h.lg)
+	created, err := houseUsecase.Create(context.Background(), &req, h.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.CreateHouseResponse{}, created)
@@ -111,7 +111,7 @@ func (h *HouseUsecaseTest) TestBadDeveloperCreateHouse(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
 	done <- true
-	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.lg)
+	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.mockLg)
 
 	req := domain.CreateHouseRequest{
 		HomeID:    0,
@@ -120,7 +120,7 @@ func (h *HouseUsecaseTest) TestBadDeveloperCreateHouse(t provider.T) {
 		Developer: "",
 	}
 
-	created, err := houseUsecase.Create(context.Background(), &req, h.lg)
+	created, err := houseUsecase.Create(context.Background(), &req, h.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.CreateHouseResponse{}, created)
@@ -130,7 +130,7 @@ func (h *HouseUsecaseTest) TestBadAddressCreateHouse(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
 	done <- true
-	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.lg)
+	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.mockLg)
 
 	req := domain.CreateHouseRequest{
 		HomeID:    0,
@@ -139,7 +139,7 @@ func (h *HouseUsecaseTest) TestBadAddressCreateHouse(t provider.T) {
 		Developer: "OOO ТестСтрой",
 	}
 
-	created, err := houseUsecase.Create(context.Background(), &req, h.lg)
+	created, err := houseUsecase.Create(context.Background(), &req, h.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.CreateHouseResponse{}, created)
@@ -149,7 +149,7 @@ func (h *HouseUsecaseTest) TestBadRepoCallCreateHouse(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
 	done <- true
-	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.lg)
+	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.mockLg)
 
 	req := domain.CreateHouseRequest{
 		HomeID:    2,
@@ -158,9 +158,9 @@ func (h *HouseUsecaseTest) TestBadRepoCallCreateHouse(t provider.T) {
 		Developer: "ООО ТестСтрой",
 	}
 
-	h.houseRepoMock.EXPECT().Create(context.Background(), gomock.Any(), h.lg).Return(domain.House{}, errors.New("error"))
+	h.houseRepoMock.EXPECT().Create(context.Background(), gomock.Any(), h.mockLg).Return(domain.House{}, errors.New("error"))
 
-	created, err := houseUsecase.Create(context.Background(), &req, h.lg)
+	created, err := houseUsecase.Create(context.Background(), &req, h.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.CreateHouseResponse{}, created)
@@ -170,7 +170,7 @@ func (h *HouseUsecaseTest) TestNormalGetFlatsByHouseID(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
 	done <- true
-	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.lg)
+	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.mockLg)
 
 	flats := []domain.Flat{}
 	singleFlats := []domain.SingleFlatResponse{}
@@ -183,9 +183,9 @@ func (h *HouseUsecaseTest) TestNormalGetFlatsByHouseID(t provider.T) {
 
 	resp := domain.FlatsByHouseResponse{singleFlats}
 
-	h.houseRepoMock.EXPECT().GetFlatsByHouseID(context.Background(), 10, domain.CreatedStatus, h.lg).Return(flats, nil)
+	h.houseRepoMock.EXPECT().GetFlatsByHouseID(context.Background(), 10, domain.CreatedStatus, h.mockLg).Return(flats, nil)
 
-	foundFlats, err := houseUsecase.GetFlatsByHouseID(context.Background(), 10, domain.CreatedStatus, h.lg)
+	foundFlats, err := houseUsecase.GetFlatsByHouseID(context.Background(), 10, domain.CreatedStatus, h.mockLg)
 
 	t.Require().Nil(err)
 	t.Require().Equal(resp, foundFlats)
@@ -195,16 +195,16 @@ func (h *HouseUsecaseTest) TestBadRepoCallGetFlatsByHouseID(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
 	done <- true
-	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.lg)
+	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.mockLg)
 
 	flats := []domain.Flat{}
 	for i := 1; i < 6; i++ {
 		flats = append(flats, h.flatMother.DefaultFlat(i, 10))
 	}
 
-	h.houseRepoMock.EXPECT().GetFlatsByHouseID(context.Background(), 10, domain.CreatedStatus, h.lg).Return([]domain.Flat{}, errors.New("error"))
+	h.houseRepoMock.EXPECT().GetFlatsByHouseID(context.Background(), 10, domain.CreatedStatus, h.mockLg).Return([]domain.Flat{}, errors.New("error"))
 
-	foundFlats, err := houseUsecase.GetFlatsByHouseID(context.Background(), 10, domain.CreatedStatus, h.lg)
+	foundFlats, err := houseUsecase.GetFlatsByHouseID(context.Background(), 10, domain.CreatedStatus, h.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.FlatsByHouseResponse{}, foundFlats)
@@ -214,9 +214,9 @@ func (h *HouseUsecaseTest) TestBadIDGetFlatsByHouseID(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
 	done <- true
-	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.lg)
+	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.mockLg)
 
-	foundedFlats, err := houseUsecase.GetFlatsByHouseID(context.Background(), -1, domain.CreatedStatus, h.lg)
+	foundedFlats, err := houseUsecase.GetFlatsByHouseID(context.Background(), -1, domain.CreatedStatus, h.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.FlatsByHouseResponse{}, foundedFlats)
@@ -226,9 +226,9 @@ func (h *HouseUsecaseTest) TestBadStatusGetFlatsByHouseID(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
 	done <- true
-	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.lg)
+	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.mockLg)
 
-	foundedFlats, err := houseUsecase.GetFlatsByHouseID(context.Background(), 10, "test", h.lg)
+	foundedFlats, err := houseUsecase.GetFlatsByHouseID(context.Background(), 10, "test", h.mockLg)
 
 	t.Require().Error(err)
 	t.Require().Equal(domain.FlatsByHouseResponse{}, foundedFlats)
@@ -238,12 +238,12 @@ func (h *HouseUsecaseTest) TestNormalSubscribeByID(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
 	done <- true
-	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.lg)
+	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.mockLg)
 
 	uid := uuid.New()
-	h.houseRepoMock.EXPECT().SubscribeByID(context.Background(), 1, uid, h.lg).Return(nil)
+	h.houseRepoMock.EXPECT().SubscribeByID(context.Background(), 1, uid, h.mockLg).Return(nil)
 
-	err := houseUsecase.SubscribeByID(context.Background(), 1, uid, h.lg)
+	err := houseUsecase.SubscribeByID(context.Background(), 1, uid, h.mockLg)
 
 	t.Require().Nil(err)
 }
@@ -252,10 +252,10 @@ func (h *HouseUsecaseTest) TestBadIDSubscribeByID(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
 	done <- true
-	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.lg)
+	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.mockLg)
 
 	uid := uuid.Nil
-	err := houseUsecase.SubscribeByID(context.Background(), 1, uid, h.lg)
+	err := houseUsecase.SubscribeByID(context.Background(), 1, uid, h.mockLg)
 
 	t.Require().Error(err)
 }
@@ -264,12 +264,12 @@ func (h *HouseUsecaseTest) TestBadRepoCallSubscribeByID(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
 	done <- true
-	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.lg)
+	houseUsecase := usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Second, time.Second, h.mockLg)
 
 	uid := uuid.New()
-	h.houseRepoMock.EXPECT().SubscribeByID(context.Background(), 1, uid, h.lg).Return(errors.New("error"))
+	h.houseRepoMock.EXPECT().SubscribeByID(context.Background(), 1, uid, h.mockLg).Return(errors.New("error"))
 
-	err := houseUsecase.SubscribeByID(context.Background(), 1, uid, h.lg)
+	err := houseUsecase.SubscribeByID(context.Background(), 1, uid, h.mockLg)
 
 	t.Require().Error(err)
 }
@@ -277,9 +277,9 @@ func (h *HouseUsecaseTest) TestBadRepoCallSubscribeByID(t provider.T) {
 func (h *HouseUsecaseTest) TestNormalNotifying(t provider.T) {
 	notifySender := ports.NewSender()
 	done := make(chan bool, 1)
-	_ = usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Minute, time.Minute, h.lg)
+	_ = usecase.NewHouseUsecase(h.houseRepoMock, notifySender, h.notifyRepoMock, done, time.Minute, time.Minute, h.mockLg)
 
-	h.notifyRepoMock.EXPECT().GetNoSendNotifies(gomock.Any(), h.lg).Times(1).Return(nil, nil)
+	h.notifyRepoMock.EXPECT().GetNoSendNotifies(gomock.Any(), h.mockLg).Times(1).Return(nil, nil)
 }
 
 func TestHouseUsecaseSuiteRunner(t *testing.T) {
