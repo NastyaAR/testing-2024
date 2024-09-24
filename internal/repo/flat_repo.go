@@ -6,17 +6,16 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 	"time"
 )
 
 type PostgresFlatRepo struct {
-	db           *pgxpool.Pool
+	db           IPool
 	retryAdapter IPostgresRetryAdapter
 }
 
-func NewPostgresFlatRepo(db *pgxpool.Pool, retryAdapter IPostgresRetryAdapter) *PostgresFlatRepo {
+func NewPostgresFlatRepo(db IPool, retryAdapter IPostgresRetryAdapter) *PostgresFlatRepo {
 	return &PostgresFlatRepo{
 		db:           db,
 		retryAdapter: retryAdapter,

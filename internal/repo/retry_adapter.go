@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
 )
 
@@ -16,12 +15,12 @@ type IPostgresRetryAdapter interface {
 }
 
 type PostgresRetryAdapter struct {
-	db              *pgxpool.Pool
+	db              IPool
 	numberOfRetries int
 	sleepTimeMs     time.Duration
 }
 
-func NewPostgresRetryAdapter(db *pgxpool.Pool, retryNumber int, sleepTimeMs time.Duration) *PostgresRetryAdapter {
+func NewPostgresRetryAdapter(db IPool, retryNumber int, sleepTimeMs time.Duration) *PostgresRetryAdapter {
 	return &PostgresRetryAdapter{
 		db:              db,
 		numberOfRetries: retryNumber,

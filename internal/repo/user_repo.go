@@ -5,16 +5,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
 
 type PostgresUserRepo struct {
-	db           *pgxpool.Pool
+	db           IPool
 	retryAdapter IPostgresRetryAdapter
 }
 
-func NewPostrgesUserRepo(db *pgxpool.Pool, retryAdapter IPostgresRetryAdapter) *PostgresUserRepo {
+func NewPostrgesUserRepo(db IPool, retryAdapter IPostgresRetryAdapter) *PostgresUserRepo {
 	return &PostgresUserRepo{
 		db:           db,
 		retryAdapter: retryAdapter,
