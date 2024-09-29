@@ -30,7 +30,7 @@ func isValidUserType(userType string) bool {
 }
 
 func (u *UserUsecase) Register(ctx context.Context, userReq *domain.RegisterUserRequest, lg *zap.Logger) (domain.RegisterUserResponse, error) {
-	lg.Info("user usecase: register", zap.String("user_type", userReq.UserType))
+	lg.Info("user usecase: register", zap.Any("user_request", userReq))
 
 	if userReq == nil {
 		lg.Warn("user usecase: register error: bad nil request")
