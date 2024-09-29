@@ -4,16 +4,15 @@ import (
 	"avito-test-task/internal/domain"
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
 
 type PostgresNotifyRepo struct {
-	db           *pgxpool.Pool
+	db           IPool
 	retryAdapter IPostgresRetryAdapter
 }
 
-func NewPostgresNotifyRepo(pg *pgxpool.Pool, retryAdapter IPostgresRetryAdapter) *PostgresNotifyRepo {
+func NewPostgresNotifyRepo(pg IPool, retryAdapter IPostgresRetryAdapter) *PostgresNotifyRepo {
 	return &PostgresNotifyRepo{
 		db:           pg,
 		retryAdapter: retryAdapter,

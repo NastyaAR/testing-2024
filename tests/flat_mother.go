@@ -29,6 +29,16 @@ func (f *FlatMother) DefaultFlatResponse(flat *domain.Flat) domain.CreateFlatRes
 	}
 }
 
+func (f *FlatMother) DefaultFlatResponseFromRequest(flatReq *domain.CreateFlatRequest) domain.CreateFlatResponse {
+	return domain.CreateFlatResponse{
+		ID:      flatReq.FlatID,
+		HouseID: flatReq.HouseID,
+		Price:   flatReq.Price,
+		Rooms:   flatReq.Rooms,
+		Status:  domain.CreatedStatus,
+	}
+}
+
 func (f *FlatMother) DefaultSingleFlatResponse(flat *domain.Flat) domain.SingleFlatResponse {
 	return domain.SingleFlatResponse{
 		ID:      flat.ID,
