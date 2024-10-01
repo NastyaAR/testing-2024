@@ -10,6 +10,6 @@ ARG postgres_test_port
 ENV POSTGRES_TEST_HOST=$postgres_test_host
 ENV POSTGRES_TEST_PORT=$postgres_test_port
 RUN wget https://github.com/allure-framework/allure2/releases/download/2.30.0/allure-2.30.0.tgz && tar -xzf allure-2.30.0.tgz
-ENV PATH=$PATH:/migrate:/usr/local/go/bin:/allure-2.30.0/bin
+ENV PATH=$PATH:/migrate:/usr/local/go/bin:/allure-2.30.0/bin:/usr/bin
 ENTRYPOINT ["/bin/bash", "-c"]
 
