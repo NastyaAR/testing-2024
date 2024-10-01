@@ -60,7 +60,7 @@ jobs:
       - name: Run testing docker-container and launch tests
         shell: 'script --return --quiet --log-out /dev/null --command "bash -e {0}"'
         run: |
-          docker run --rm --it app:v1.0.0 "cd /testing-2024 && make test"
+          docker run --rm -it app:v1.0.0 "cd /testing-2024 && make test"
           
           
 
