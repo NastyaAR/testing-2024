@@ -11,7 +11,7 @@ run-db:
  	fi
 
 test:
-migrate -source file://test_migrations -database postgres://test-user:test-password@${POSTGRES_TEST_HOST}:${POSTGRES_TEST_PORT}/test-db?sslmode=disable force 20240806143730
+	migrate -source file://test_migrations -database postgres://test-user:test-password@${POSTGRES_TEST_HOST}:${POSTGRES_TEST_PORT}/test-db?sslmode=disable force 20240806143730
 	migrate -source file://test_migrations -database postgres://test-user:test-password@${POSTGRES_TEST_HOST}:${POSTGRES_TEST_PORT}/test-db?sslmode=disable down -all
 	migrate -source file://test_migrations -database postgres://test-user:test-password@${POSTGRES_TEST_HOST}:${POSTGRES_TEST_PORT}/test-db?sslmode=disable up
 	cd tests && go test . -tags=unit
