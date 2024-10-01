@@ -17,9 +17,9 @@ test:
 	cd tests && go test . -tags=unit
 	cd tests && go test . -tags=integration
 	cd tests && go test . -tags=e2e
-	/home/nastya/allure-2.30.0/bin/allure generate ./tests/allure-results --clean -o ./tests/allure-report
+	allure generate ./tests/allure-results --clean -o ./tests/allure-report
 	mkdir -p ./tests/allure-results/history && cp -r ./tests/allure-report/history/* ./tests/allure-results/history/ || true
-#	/home/nastya/allure-2.30.0/bin/allure serve ./tests/allure-results
+#	allure serve ./tests/allure-results
 
 test_coverage:
 	go test ./tests -coverprofile=coverage.out
