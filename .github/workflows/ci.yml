@@ -18,11 +18,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Set up Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
       - name: Run services
         env:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
@@ -30,7 +25,7 @@ jobs:
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         run: |
           export POSTGRES_USER=$POSTGRES_USER POSTGRES_PASSWORD=$POSTGRES_PASSWORD POSTGRES_DB=$POSTGRES_DB
-          docker-compose up -d
+          docker compose up -d
           docker logs postgres-db
 
       - name: Check services
@@ -40,7 +35,7 @@ jobs:
 
       - name: Stop services
         run:
-          docker-compose down
+          docker compose down
 
   test:
     runs-on: ubuntu-latest
@@ -53,15 +48,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Set up Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
       - name: Run test db
         run: |
-          docker-compose up -d postgres-test
-          docker logs postgres-db
+          docker compose up -d postgres-test
+          docker logs postgres-test
 
       - name: Build testing docker-image
         run: |
