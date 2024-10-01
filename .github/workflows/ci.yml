@@ -50,6 +50,7 @@ jobs:
 
       - name: Run test db
         run: |
+          docker ps -a
           docker compose up -d postgres-test
 
       - name: Build testing docker-image
