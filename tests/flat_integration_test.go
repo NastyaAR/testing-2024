@@ -61,7 +61,7 @@ func (f *FlatIntegrationTest) TestNormalCreate(t provider.T) {
 	}
 
 	newFlat := domain.CreateFlatRequest{
-		FlatID:  11,
+		FlatID:  110,
 		HouseID: 1,
 		Price:   1000000,
 		Rooms:   2,
