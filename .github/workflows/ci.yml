@@ -58,9 +58,9 @@ jobs:
           docker build -t app:v1.0.0 -f tests/Dockerfile .
 
       - name: Run testing docker-container and launch tests
+        shell: 'script --return --quiet --log-out /dev/null --command "bash -e {0}"'
         run: |
-          docker run app:v1.0.0
-          docker exec -it app:v1.0.0 "cd /testing-2024 && make test"
+          docker run --rm --it app:v1.0.0 "cd /testing-2024 && make test"
           
           
 
