@@ -1,6 +1,3 @@
-//go:build e2e
-// +build e2e
-
 package tests
 
 import (
@@ -37,10 +34,15 @@ type ClientTest struct {
 }
 
 func (c *ClientTest) BeforeAll(t provider.T) {
-	connString := "postgres://test-user:test-password@postgres-test-db:5432/test-db?sslmode=disable"
+	host := os.Getenv("POSTGRES_TEST_HOST")
+	port := os.Getenv("POSTGRES_TEST_PORT")
+	connString := "postgres://test-user:test-password@" + host + ":" + port + "/test-db?sslmode=disable"
 
 	var err error
-	c.db, err = pgxpool.New(context.Background(), connString)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	c.db, err = pgxpool.New(ctx, connString)
 	if err != nil {
 		t.Fatalf("error while connecting to db: %v", err.Error())
 	}
@@ -57,6 +59,7 @@ func (c *ClientTest) BeforeAll(t provider.T) {
 	c.notifySender = ports.NewSender()
 
 	c.done = make(chan bool, 1)
+	c.done <- true
 	c.houseUsecase = usecase.NewHouseUsecase(c.houseRepo, c.notifySender,
 		c.notifyRepo, c.done, time.Second, time.Second, c.lg)
 
@@ -69,7 +72,6 @@ func (c *ClientTest) BeforeAll(t provider.T) {
 }
 
 func (c *ClientTest) AfterAll(t provider.T) {
-	c.done <- true
 	c.db.Close()
 }
 
