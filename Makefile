@@ -11,8 +11,8 @@ run-db:
  	fi
 
 test:
-	migrate -source file://test_migrations -database postgres://test-user:test-password@localhost:5431/test-db?sslmode=disable down -all
-	migrate -source file://test_migrations -database postgres://test-user:test-password@localhost:5431/test-db?sslmode=disable up
+	migrate -source file://test_migrations -database postgres://test-user:test-password@postgres-test-db:5432/test-db?sslmode=disable down -all
+	migrate -source file://test_migrations -database postgres://test-user:test-password@postgres-test-db:5432/test-db?sslmode=disable up
 	cd tests && go test . -tags=unit
 	cd tests && go test . -tags=integration
 	cd tests && go test . -tags=e2e
