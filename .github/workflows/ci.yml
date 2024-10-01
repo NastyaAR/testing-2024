@@ -55,7 +55,7 @@ jobs:
       - name: Build testing docker-image
         run: |
           ls -al
-          docker build -t app:v1.0.0 tests/Dockerfile
+          docker build -t app:v1.0.0 -f tests/Dockerfile .
 
       - name: Run testing docker-container and launch tests
         run: |
