@@ -59,7 +59,8 @@ jobs:
 
       - name: Run testing docker-container and launch tests
         run: |
-          docker run --rm -it app:v1.0.0 "cd /testing-2024 && make test"
+          docker run app:v1.0.0
+          docker exec -it app:v1.0.0 "cd /testing-2024 && make test"
           
           
 
