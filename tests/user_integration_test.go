@@ -28,7 +28,7 @@ type UserIntegrationTest struct {
 }
 
 func (u *UserIntegrationTest) BeforeAll(t provider.T) {
-	connString := "postgres://test-user:test-password@127.0.0.1:5431/test-db?sslmode=disable"
+	connString := "postgres://test-user:test-password@postgres-test-db:5432/test-db?sslmode=disable"
 
 	var err error
 	u.db, err = pgxpool.New(context.Background(), connString)
