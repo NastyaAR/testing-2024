@@ -1,3 +1,6 @@
+//go:build e2e
+// +build e2e
+
 package tests
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/ozontech/allure-go/pkg/framework/provider"
 	"github.com/ozontech/allure-go/pkg/framework/suite"
 	"go.uber.org/zap"
+	"os"
 	"testing"
 	"time"
 )
@@ -25,6 +29,7 @@ type ClientTest struct {
 	flatRepo     domain.FlatRepo
 	houseRepo    domain.HouseRepo
 	notifyRepo   domain.NotifyRepo
+	skipped      bool
 
 	db   repo.IPool
 	lg   *zap.Logger
@@ -54,6 +59,13 @@ func (c *ClientTest) BeforeAll(t provider.T) {
 	c.done = make(chan bool, 1)
 	c.houseUsecase = usecase.NewHouseUsecase(c.houseRepo, c.notifySender,
 		c.notifyRepo, c.done, time.Second, time.Second, c.lg)
+
+	args := os.Args
+	for _, arg := range args {
+		if arg == "skipped" {
+			c.skipped = true
+		}
+	}
 }
 
 func (c *ClientTest) AfterAll(t provider.T) {
@@ -61,7 +73,11 @@ func (c *ClientTest) AfterAll(t provider.T) {
 	c.db.Close()
 }
 
-func (c *ClientTest) CreateNewFlat(t provider.T) {
+func (c *ClientTest) TestCreateNewFlat(t provider.T) {
+	if c.skipped {
+		t.Skip()
+	}
+
 	registerRequest := domain.RegisterUserRequest{
 		Email:    "masha@mail.ru",
 		Password: "12345",
@@ -71,7 +87,6 @@ func (c *ClientTest) CreateNewFlat(t provider.T) {
 	ctx := context.Background()
 
 	registerResponse, registerErr := c.userUsecase.Register(ctx, &registerRequest, c.lg)
-
 	loginRequest := domain.LoginUserRequest{
 		ID:       registerResponse.UserID,
 		Password: registerRequest.Password,
