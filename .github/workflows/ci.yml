@@ -39,7 +39,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    environment: avito-env
+    environment: test-env
 
     steps:
       - name: Check out repository
@@ -53,9 +53,12 @@ jobs:
           docker compose up -d postgres-test
 
       - name: Build testing docker-image
+        env:
+          POSTGRES_TEST_HOST: ${{ secrets.POSTGRES_TEST_HOST }}
+          POSTGRES_TEST_PORT: ${{ secrets.POSTGRES_TEST_PORT }}
         run: |
           ls -al
-          docker build -t app:v1.0.0 -f tests/Dockerfile .
+          docker build -t app:v1.0.0 -f tests/Dockerfile --build-arg postgres_test_host=${POSTGRES_TEST_HOST} --build-arg postgres_test_port=${POSTGRES_TEST_PORT} . 
 
       - name: Run testing docker-container and launch tests
         shell: 'script --return --quiet --log-out /dev/null --command "bash -e {0}"'

@@ -32,7 +32,9 @@ type HouseIntegrationTest struct {
 }
 
 func (h *HouseIntegrationTest) BeforeAll(t provider.T) {
-	connString := "postgres://test-user:test-password@postgres-test-db:5432/test-db?sslmode=disable"
+	host := os.Getenv("POSTGRES_TEST_HOST")
+	port := os.Getenv("POSTGRES_TEST_PORT")
+	connString := "postgres://test-user:test-password@" + host + ":" + port + "/test-db?sslmode=disable"
 
 	var err error
 	h.db, err = pgxpool.New(context.Background(), connString)
