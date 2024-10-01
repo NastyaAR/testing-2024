@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - lab02
 
 jobs:
   build:
