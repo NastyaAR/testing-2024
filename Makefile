@@ -19,7 +19,7 @@ test:
 	cd tests && go test . -tags=e2e
 	allure generate ./tests/allure-results --clean -o ./tests/allure-report
 	mkdir -p ./tests/allure-results/history && cp -r ./tests/allure-report/history/* ./tests/allure-results/history/ || true
-#	allure serve ./tests/allure-results
+	@if [ $(ALLURE_SERVE) -eq "1" ]; then allure serve ./tests/allure-results; fi
 
 test_coverage:
 	go test ./tests -coverprofile=coverage.out
