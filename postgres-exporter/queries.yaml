@@ -1,0 +1,24 @@
+pg_cpu_info:
+  query: "select sum(foo.get_pid_cpu) from (select pid, get_pid_cpu(pid) from pg_stat_activity) as foo;"
+  master: true
+  cache_seconds: 3
+  metrics:
+    - datname:
+        usage: "LABEL"
+        description: "Name of the database"
+    - percents:
+        usage: "GAUGE"
+        description: "Sum cpu percent usage"
+        
+
+pg_mem_info:
+  query: "select sum(foo.get_pid_mem) from (select pid, get_pid_mem(pid) from pg_stat_activity) as foo;"
+  master: true
+  cache_seconds: 3
+  metrics:
+    - datname:
+        usage: "LABEL"
+        description: "Name of the database"
+    - percents:
+        usage: "GAUGE"
+        description: "Sum mem percent usage"

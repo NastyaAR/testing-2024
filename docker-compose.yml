@@ -65,7 +65,7 @@ services:
     image: postgres:12.19-bullseye
     container_name: postgres-db
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_DB: postgres
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PGDATA: "/var/lib/postgresql/data/pgdata"
@@ -74,6 +74,7 @@ services:
     volumes:
       - ./postgres/postgres.conf:/usr/local/etc/postgres/postgres.conf
       - ./postgres/postgres-data:/var/lib/postgresql/data
+      - ./init-postgres:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -84,11 +85,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 1G
+          cpus: '4'
+          memory: 4G
         reservations:
-          cpus: '0.2'
-          memory: 512M
+          cpus: '2'
+          memory: 2G
     networks:
         - dev
 
@@ -147,9 +148,124 @@ services:
     networks:
         - dev
 
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+      - prometheus_data:/prometheus
+    ports:
+      - 9090:9090
+    networks:
+      - dev
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana:/etc/grafana/provisioning/datasources
+    networks:
+      - dev
+
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    user:
+      root:root
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - 9100:9100
+    networks:
+      - dev
+
+  
+  postgres-exporter:
+    container_name: postgres_exporter
+    image: prometheuscommunity/postgres-exporter
+    depends_on:
+      - postgres
+    ports:
+      - "9187:9187"
+    restart: unless-stopped
+    networks:
+      - dev
+    environment:
+      DATA_SOURCE_URI: "postgres:5432/postgres?sslmode=disable"
+      DATA_SOURCE_USER: ${POSTGRES_USER}
+      DATA_SOURCE_PASS: ${POSTGRES_PASSWORD}
+      PG_EXPORTER_EXTEND_QUERY_PATH: "/queries/queries.yaml"
+    volumes:
+       - ./postgres-exporter/:/queries
+
+
+  mysql_db:
+    image: mysql:8
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: test
+      MYSQL_USER: example
+      MYSQL_PASSWORD: secret2
+    volumes:
+      - ./dbdata:/var/lib/mysql/
+    networks:
+      - dev
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '2'
+          memory: 2G
+
+
+  mysql-exporter:
+    image: prom/mysqld-exporter
+    depends_on:
+      - mysql_db
+    command: 
+     - --config.my-cnf=/cfg/.my.cnf
+     - --mysqld.address=mysql_db:3306
+    volumes:
+      - "./.my.cnf:/cfg/.my.cnf"
+    ports:
+      - 9104:9104
+    networks:
+      - dev
+    entrypoint: ["/bin/mysqld_exporter", "--collect.mysql.user", "--collect.perf_schema.tablelocks", "--collect.perf_schema.eventsstatements", "--collect.perf_schema.memory_events", "--collect.info_schema.tables"]
+      
+
 volumes:
   postgres:
   migrations:
+  prometheus_data:
+  postgres-exporter:
   
 networks:
     dev: 
