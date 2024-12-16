@@ -88,8 +88,9 @@ jobs:
           docker compose up -d postgres
           sleep 5
           docker compose up -d migrate
-          (go run cmd/main.go &)
+          docker build -t goback -f Dockerfile
           sleep 5
+          docker compose up -d backend1
           make auth
 
 
