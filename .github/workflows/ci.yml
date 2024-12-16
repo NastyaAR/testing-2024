@@ -60,6 +60,10 @@ jobs:
           POSTGRES_TEST_PORT: ${{ secrets.POSTGRES_TEST_PORT }}
           PASSWORD: ${{ secrets.PASSWORD }}
           TOKEN: ${{ secrets.TOKEN }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_USER }}
+          KEY: ${{ secrets.KEY }} 
         run: |
           ls -al
           docker build -t app:v1.0.0 -f tests/Dockerfile --build-arg postgres_test_host=${POSTGRES_TEST_HOST} --build-arg postgres_test_port=${POSTGRES_TEST_PORT} --build-arg token=${TOKEN} --build-arg password=${PASSWORD} . 
@@ -67,10 +71,24 @@ jobs:
       - name: Run testing docker-container and launch tests
         shell: 'script --return --quiet --log-out /dev/null --command "bash -e {0}"'
         run: |
-          export 
           docker run --name testing --network testing-2024_dev -it app:v1.0.0 "cd /testing-2024 && make test"
           docker cp testing:/testing-2024/tests/allure-report .
           docker cp testing:/testing-2024/tests/allure-results .
+
+      - name: Run docker-container and launch auth test
+        shell: 'script --return --quiet --log-out /dev/null --command "bash -e {0}"'
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_USER }}
+          KEY: ${{ secrets.KEY }} 
+        run: |
+          export POSTGRES_USER=${POSTGRES_USER} POSTGRES_PASSWORD=${POSTGRES_PASSWORD} POSTGRES_DB=${POSTGRES_DB} KEY=${KEY} TOKEN=${TOKEN}
+          docker compose up -d
+          docker ps -a
+          make auth
+
 
       - name: Archive code test results
         uses: actions/upload-artifact@v4

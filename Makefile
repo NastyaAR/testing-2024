@@ -18,10 +18,13 @@ test:
 	cd tests && go test . -tags=unit
 	cd tests && go test . -tags=integration
 	cd tests && go test . -tags=e2e
-	cd tests && go test . -tags=auth
 	allure generate ./tests/allure-results --clean -o ./tests/allure-report
 	mkdir -p ./tests/allure-results/history && cp -r ./tests/allure-report/history/* ./tests/allure-results/history/ || true
 	@if [ $(ALLURE_SERVE) -eq "1" ]; then allure serve ./tests/allure-results; fi
+
+auth:
+	export POSTGRES_TEST_HOST=postgres-test POSTGRES_TEST_PORT=5431
+	cd tests && go test . -tags=auth
 
 test_coverage:
 	go test ./tests -coverprofile=coverage.out
