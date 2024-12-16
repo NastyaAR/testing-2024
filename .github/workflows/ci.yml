@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - lab02
+      - lab04
 
 jobs:
 #  build:
