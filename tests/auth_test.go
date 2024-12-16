@@ -241,7 +241,7 @@ func TestScenarios(t *testing.T) {
 	user := os.Getenv("POSTGRES_USER")
 	password := os.Getenv("POSTGRES_PASSWORD")
 	host := "0.0.0.0"
-	connString := fmt.Sprintf("postgres://%s:%s@%s:/%s?sslmode=disable",
+	connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		user, password, host, "5432", db)
 
 	pool, err := pgxpool.New(context.Background(), connString)
