@@ -90,7 +90,8 @@ jobs:
           docker compose up -d migrate
           docker build -t goback -f Dockerfile .
           sleep 5
-          docker compose up -d backend1
+          docker compose up -d backend1 backend2 backend3 nginx
+          sleep 5
           make auth
 
 
