@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -236,9 +237,12 @@ func loginVer(t gobdd.StepTest, ctx gobdd.Context, userId, password string) {
 }
 
 func TestScenarios(t *testing.T) {
-	host := os.Getenv("POSTGRES_TEST_HOST")
-	port := os.Getenv("POSTGRES_TEST_PORT")
-	connString := "postgres://test-user:test-password@" + host + ":" + port + "/test-db?sslmode=disable"
+	db := os.Getenv("POSTGRES_DB")
+	user := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	host := "0.0.0.0"
+	connString := fmt.Sprintf("postgres://%s:%s@%s:/%s?sslmode=disable",
+		user, password, host, "5432", db)
 
 	pool, err := pgxpool.New(context.Background(), connString)
 	defer pool.Close()
