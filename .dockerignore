@@ -7,3 +7,4 @@
   Dockerfile
   docker
   README.md
+  postgres/postgres-data/pgdata
