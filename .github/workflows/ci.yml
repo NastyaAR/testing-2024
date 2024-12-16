@@ -92,7 +92,7 @@ jobs:
           sleep 5
           docker compose up -d backend1 backend2 backend3 nginx
           sleep 5
-          make auth
+          cd tests && go test . -tags=auth
 
 
       - name: Archive code test results

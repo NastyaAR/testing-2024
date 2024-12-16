@@ -95,7 +95,7 @@ func checkLogin(t gobdd.StepTest, ctx gobdd.Context, expected string) {
 	msg := message.(string)
 
 	if !strings.Contains(msg, expected) {
-		t.Errorf("doesn t send code")
+		t.Errorf("doesn t send code %s", msg)
 	}
 }
 
