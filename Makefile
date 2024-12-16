@@ -23,7 +23,6 @@ test:
 	@if [ $(ALLURE_SERVE) -eq "1" ]; then allure serve ./tests/allure-results; fi
 
 auth:
-	export POSTGRES_TEST_HOST=postgres-test POSTGRES_TEST_PORT=5431
 	cd tests && go test . -tags=auth
 
 test_coverage:
