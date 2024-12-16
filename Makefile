@@ -1,7 +1,7 @@
 SERVICE_NAME=postgres-test
 COMPOSE_FILE=docker-compose.yml
 
-.PHONY: run-db test
+.PHONY: run-db test auth
 
 run-db:
 	@if [ -z "$$(docker compose -f $(COMPOSE_FILE) ps -q $(SERVICE_NAME))" ]; then \
