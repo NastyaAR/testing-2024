@@ -62,7 +62,7 @@ jobs:
           TOKEN: ${{ secrets.TOKEN }}
         run: |
           ls -al
-          docker build -t app:v1.0.0 -f tests/Dockerfile --build-arg postgres_test_host=${POSTGRES_TEST_HOST} --build-arg postgres_test_port=${POSTGRES_TEST_PORT} token=${TOKEN} password=${PASSWORD} . 
+          docker build -t app:v1.0.0 -f tests/Dockerfile --build-arg postgres_test_host=${POSTGRES_TEST_HOST} --build-arg postgres_test_port=${POSTGRES_TEST_PORT} --build-arg token=${TOKEN} --build-arg password=${PASSWORD} . 
 
       - name: Run testing docker-container and launch tests
         shell: 'script --return --quiet --log-out /dev/null --command "bash -e {0}"'
