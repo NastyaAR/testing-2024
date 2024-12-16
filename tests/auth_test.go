@@ -37,7 +37,7 @@ func register(t gobdd.StepTest, ctx gobdd.Context, tg, password, role string) {
 	}
 	reader := bytes.NewReader(body)
 
-	resp, err := http.Post("http://0.0.0.0:80/register", "application/json", reader)
+	resp, err := http.Post("http://0.0.0.0:8081/register", "application/json", reader)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -71,7 +71,7 @@ func login(t gobdd.StepTest, ctx gobdd.Context, userId, password string) {
 	}
 	reader := bytes.NewReader(body)
 
-	resp, err := http.Post("http://0.0.0.0:80/login", "application/json", reader)
+	resp, err := http.Post("http://0.0.0.0:8081/login", "application/json", reader)
 	var r domain.LoginUserResponse
 
 	body, err = ioutil.ReadAll(resp.Body)
@@ -117,7 +117,7 @@ func verificate(t gobdd.StepTest, ctx gobdd.Context) {
 	}
 	reader := bytes.NewReader(body)
 
-	resp, err := http.Post("http://0.0.0.0:80/finallogin", "application/json", reader)
+	resp, err := http.Post("http://0.0.0.0:8081/finallogin", "application/json", reader)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -144,7 +144,7 @@ func badVerificate(t gobdd.StepTest, ctx gobdd.Context) {
 	}
 	reader := bytes.NewReader(body)
 
-	resp, err := http.Post("http://0.0.0.0:80/finallogin", "application/json", reader)
+	resp, err := http.Post("http://0.0.0.0:8081/finallogin", "application/json", reader)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -183,7 +183,7 @@ func badLogin(t gobdd.StepTest, ctx gobdd.Context, userId, password string) {
 	}
 	reader := bytes.NewReader(body)
 
-	resp, err := http.Post("http://0.0.0.0:80/login", "application/json", reader)
+	resp, err := http.Post("http://0.0.0.0:8081/login", "application/json", reader)
 	var r handlers.ErrorResponse
 
 	body, err = ioutil.ReadAll(resp.Body)
@@ -220,7 +220,7 @@ func loginVer(t gobdd.StepTest, ctx gobdd.Context, userId, password string) {
 	}
 	reader := bytes.NewReader(body)
 
-	resp, err := http.Post("http://0.0.0.0:80/login", "application/json", reader)
+	resp, err := http.Post("http://0.0.0.0:8081/login", "application/json", reader)
 	var r domain.LoginUserResponse
 
 	body, err = ioutil.ReadAll(resp.Body)
