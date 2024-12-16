@@ -46,6 +46,11 @@ create table new_flats_outbox (
     foreign key (flat_id, house_id) references flats(flat_id, house_id)
 );
 
+create table codes (
+    user_id uuid references users(user_id) on delete cascade,
+    code text
+);
+
 create or replace function insert_flat_to_outbox()
     returns trigger as $$
 declare

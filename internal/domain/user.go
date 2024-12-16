@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"errors"
+
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -47,8 +48,17 @@ type LoginUserRequest struct {
 	Password string    `json:"password"`
 }
 
-type LoginUserResponse struct {
+type FinalLoginUserRequest struct {
+	ID   uuid.UUID `json:"id"`
+	Code int       `json:"code"`
+}
+
+type FinalLoginUserResponse struct {
 	Token string `json:"token"`
+}
+
+type LoginUserResponse struct {
+	Message string `json:"message"`
 }
 
 type DummyLoginRequest struct {
@@ -59,6 +69,7 @@ type UserUsecase interface {
 	Register(ctx context.Context, userReq *RegisterUserRequest, lg *zap.Logger) (RegisterUserResponse, error)
 	Login(ctx context.Context, userReq *LoginUserRequest, lg *zap.Logger) (LoginUserResponse, error)
 	DummyLogin(ctx context.Context, userType string, lg *zap.Logger) (LoginUserResponse, error)
+	FinalLogin(ctx context.Context, userReq *FinalLoginUserRequest, lg *zap.Logger) (FinalLoginUserResponse, error)
 }
 
 type UserRepo interface {
@@ -67,4 +78,10 @@ type UserRepo interface {
 	Update(ctx context.Context, newUserData *User, lg *zap.Logger) error
 	GetByID(ctx context.Context, id uuid.UUID, lg *zap.Logger) (User, error)
 	GetAll(ctx context.Context, offset int, limit int, lg *zap.Logger) ([]User, error)
+	CreateCode(ctx context.Context, user *User, codeHash string, lg *zap.Logger) error
+	GetHashCode(ctx context.Context, user *User, lg *zap.Logger) (string, error)
+}
+
+type CodeSender interface {
+	SendCode(ctx context.Context, user *User, code int, lg *zap.Logger) error
 }

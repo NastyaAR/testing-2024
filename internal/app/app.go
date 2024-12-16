@@ -10,12 +10,14 @@ import (
 	"avito-test-task/pkg"
 	"context"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"log"
-	"net/http"
-	"time"
 )
 
 func Run(cfg *config.Config) {
@@ -51,7 +53,7 @@ func Run(cfg *config.Config) {
 	houseHandler := handlers.NewHouseHandler(houseUsecase, time.Duration(cfg.DbTimeoutSec)*time.Second, lg)
 
 	userRepo := repo.NewPostrgesUserRepo(pool, retryAdapter)
-	userUsecase := usecase.NewUserUsecase(userRepo)
+	userUsecase := usecase.NewUserUsecase(userRepo, os.Getenv("TOKEN"))
 	userHandler := handlers.NewUserHandler(userUsecase, time.Duration(cfg.DbTimeoutSec)*time.Second, lg)
 
 	flatRepo := repo.NewPostgresFlatRepo(pool, retryAdapter)
@@ -67,11 +69,11 @@ func Run(cfg *config.Config) {
 	r.Get("/dummyLogin", userHandler.DummyLogin)
 	r.Post("/register", userHandler.Register)
 	r.Post("/login", userHandler.Login)
+	r.Post("/finallogin", userHandler.FinalLogin)
 	r.Post("/flat/update", mdware.AuthMiddleware(mdware.AccessMiddleware(flatHandler.Update)))
 	r.Post("/flat/create", mdware.AuthMiddleware(flatHandler.Create))
 	r.Post("/house/{id}/subscribe", mdware.AuthMiddleware(houseHandler.Subscribe))
 
-	fmt.Println("done")
 	err = http.ListenAndServe(":8081", r)
 	if err != nil {
 		fmt.Println(err)

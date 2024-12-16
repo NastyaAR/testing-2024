@@ -10,14 +10,15 @@ import (
 	mock_domain "avito-test-task/tests/mocks"
 	"context"
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/ozontech/allure-go/pkg/framework/provider"
 	"github.com/ozontech/allure-go/pkg/framework/suite"
 	"go.uber.org/mock/gomock"
 	"go.uber.org/zap"
-	"testing"
-	"time"
 )
 
 type UserRepoTest struct {

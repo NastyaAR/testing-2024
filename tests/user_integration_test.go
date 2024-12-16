@@ -9,13 +9,14 @@ import (
 	"avito-test-task/internal/usecase"
 	"avito-test-task/pkg"
 	"context"
+	"os"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ozontech/allure-go/pkg/framework/provider"
 	"github.com/ozontech/allure-go/pkg/framework/suite"
 	"go.uber.org/zap"
-	"os"
-	"testing"
 )
 
 type UserIntegrationTest struct {

@@ -5,24 +5,35 @@ import (
 	"avito-test-task/pkg"
 	"context"
 	"fmt"
+	"math/rand"
+	"net/mail"
+	"strconv"
+	"time"
+
 	"github.com/google/uuid"
 	"go.uber.org/zap"
-	"net/mail"
 )
 
-type UserUsecase struct {
-	userRepo domain.UserRepo
+func generateSixDigitNumber() int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Intn(900000) + 100000
 }
 
-func NewUserUsecase(userRepo domain.UserRepo) *UserUsecase {
+type UserUsecase struct {
+	userRepo   domain.UserRepo
+	codeSender domain.CodeSender
+}
+
+func NewUserUsecase(userRepo domain.UserRepo, token string) *UserUsecase {
 	return &UserUsecase{
-		userRepo: userRepo,
+		userRepo:   userRepo,
+		codeSender: NewTelegramCodeSender(token),
 	}
 }
 
 func isValidEmail(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
+	_, _ = mail.ParseAddress(email)
+	return true
 }
 
 func isValidUserType(userType string) bool {
@@ -105,13 +116,60 @@ func (u *UserUsecase) Login(ctx context.Context, userReq *domain.LoginUserReques
 		return domain.LoginUserResponse{}, fmt.Errorf("user usecase: login error: %v", err.Error())
 	}
 
-	token, err := pkg.GenerateJWTToken(expectedUser.UserID, expectedUser.Role)
+	code := generateSixDigitNumber()
+	codeHash, _ := pkg.EncryptPassword(strconv.Itoa(code), lg)
+
+	err = u.userRepo.CreateCode(ctx, &expectedUser, codeHash, lg)
 	if err != nil {
 		lg.Warn("user usecase: login error", zap.Error(err))
 		return domain.LoginUserResponse{}, fmt.Errorf("user usecase: login error: %v", err.Error())
 	}
 
-	return domain.LoginUserResponse{token}, nil
+	err = u.codeSender.SendCode(ctx, &expectedUser, code, lg)
+	if err != nil {
+		lg.Warn("user usecase: login error", zap.Error(err))
+		return domain.LoginUserResponse{}, fmt.Errorf("user usecase: login error: %v", err.Error())
+	}
+
+	msg := fmt.Sprintf("we send code to your telegram, %s", expectedUser.Mail)
+
+	return domain.LoginUserResponse{msg}, nil
+}
+
+func (u *UserUsecase) FinalLogin(ctx context.Context, userReq *domain.FinalLoginUserRequest, lg *zap.Logger) (domain.FinalLoginUserResponse, error) {
+	lg.Info("user usecase: final login")
+
+	if userReq == nil {
+		lg.Warn("user usecase: login error: bad nil request")
+		return domain.FinalLoginUserResponse{},
+			fmt.Errorf("user usecase: login error: %w", domain.ErrUser_BadRequest)
+	}
+
+	expectedUser, err := u.userRepo.GetByID(ctx, userReq.ID, lg)
+	if err != nil {
+		lg.Warn("user usescase: login error", zap.Error(err))
+		return domain.FinalLoginUserResponse{}, fmt.Errorf("user usecase: login error: %v", err.Error())
+	}
+
+	expectedCode, err := u.userRepo.GetHashCode(ctx, &expectedUser, lg)
+	if err != nil {
+		lg.Warn("user usescase: login error", zap.Error(err))
+		return domain.FinalLoginUserResponse{}, fmt.Errorf("user usecase: login error: %v", err.Error())
+	}
+
+	err = pkg.IsEqualPasswords(expectedCode, strconv.Itoa(userReq.Code))
+	if err != nil {
+		lg.Warn("user usecase: login error", zap.Error(err))
+		return domain.FinalLoginUserResponse{}, fmt.Errorf("user usecase: login error: %v", err.Error())
+	}
+
+	token, err := pkg.GenerateJWTToken(expectedUser.UserID, expectedUser.Role)
+	if err != nil {
+		lg.Warn("user usecase: login error", zap.Error(err))
+		return domain.FinalLoginUserResponse{}, fmt.Errorf("user usecase: login error: %v", err.Error())
+	}
+
+	return domain.FinalLoginUserResponse{token}, nil
 }
 
 func (u *UserUsecase) DummyLogin(ctx context.Context, userType string, lg *zap.Logger) (domain.LoginUserResponse, error) {

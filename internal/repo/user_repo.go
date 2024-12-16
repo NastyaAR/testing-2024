@@ -3,7 +3,9 @@ package repo
 import (
 	"avito-test-task/internal/domain"
 	"context"
+	"database/sql"
 	"fmt"
+
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -105,4 +107,44 @@ func (p *PostgresUserRepo) GetAll(ctx context.Context, offset int, limit int, lg
 	}
 
 	return users, err
+}
+
+func (p *PostgresUserRepo) CreateCode(ctx context.Context, user *domain.User, codeHash string, lg *zap.Logger) error {
+	lg.Info("create or update code", zap.String("user_id", user.UserID.String()))
+
+	query := `UPDATE codes SET code = $1 WHERE user_id = $2`
+	result, err := p.db.Exec(ctx, query, codeHash, user.UserID)
+	if err != nil {
+		lg.Warn("postgres update code error", zap.Error(err))
+		return err
+	}
+
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		query := `INSERT INTO codes (user_id, code) VALUES ($1, $2)`
+		_, err = p.db.Exec(ctx, query, user.UserID, codeHash)
+		if err != nil {
+			lg.Warn("postgres insert code error", zap.Error(err))
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (p *PostgresUserRepo) GetHashCode(ctx context.Context, user *domain.User, lg *zap.Logger) (string, error) {
+	lg.Info("get hash code", zap.String("user_id", user.UserID.String()))
+
+	query := `SELECT code FROM codes WHERE user_id = $1`
+	var code string
+	err := p.db.QueryRow(ctx, query, user.UserID).Scan(&code)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", fmt.Errorf("hash code not found for user %s", user.UserID)
+		}
+		lg.Warn("postgres get hash code error", zap.Error(err))
+		return "", err
+	}
+
+	return code, nil
 }

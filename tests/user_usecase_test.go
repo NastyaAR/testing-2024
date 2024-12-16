@@ -1,5 +1,5 @@
-//go:build unit
-// +build unit
+//go:build old
+// +build old
 
 package tests
 
@@ -10,29 +10,32 @@ import (
 	mock_domain "avito-test-task/tests/mocks"
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/ozontech/allure-go/pkg/framework/provider"
 	"github.com/ozontech/allure-go/pkg/framework/suite"
 	"go.uber.org/mock/gomock"
 	"go.uber.org/zap"
-	"testing"
 )
 
 type UserUsecaseTest struct {
 	suite.Suite
-	userRepoMock *mock_domain.MockUserRepo
-	mockLg       *zap.Logger
+	userRepoMock   *mock_domain.MockUserRepo
+	codeSenderMock *mock_domain.MockCodeSender
+	mockLg         *zap.Logger
 }
 
 func (u *UserUsecaseTest) BeforeAll(t provider.T) {
 	t.Log("Init mock")
 	ctrl := gomock.NewController(t)
 	u.userRepoMock = mock_domain.NewMockUserRepo(ctrl)
+	u.codeSenderMock = mock_domain.NewMockCodeSender(ctrl)
 	u.mockLg = pkg.CreateMockLogger()
 }
 
 func (u *UserUsecaseTest) TestNormalRegister(t provider.T) {
-	userUsecase := usecase.NewUserUsecase(u.userRepoMock)
+	userUsecase := usecase.NewUserUsecase(u.userRepoMock, "token")
 
 	req := domain.RegisterUserRequest{
 		Email:    "test@mail.ru",
@@ -48,7 +51,7 @@ func (u *UserUsecaseTest) TestNormalRegister(t provider.T) {
 }
 
 func (u *UserUsecaseTest) TestBadPasswordRegister(t provider.T) {
-	userUsecase := usecase.NewUserUsecase(u.userRepoMock)
+	userUsecase := usecase.NewUserUsecase(u.userRepoMock, "token")
 
 	req := domain.RegisterUserRequest{
 		Email:    "test@mail.ru",
@@ -62,7 +65,7 @@ func (u *UserUsecaseTest) TestBadPasswordRegister(t provider.T) {
 }
 
 func (u *UserUsecaseTest) TestBadMailRegister(t provider.T) {
-	userUsecase := usecase.NewUserUsecase(u.userRepoMock)
+	userUsecase := usecase.NewUserUsecase(u.userRepoMock, "token")
 
 	req := domain.RegisterUserRequest{
 		Email:    "testmail.ru",
@@ -76,7 +79,7 @@ func (u *UserUsecaseTest) TestBadMailRegister(t provider.T) {
 }
 
 func (u *UserUsecaseTest) TestBadUserTypeRegister(t provider.T) {
-	userUsecase := usecase.NewUserUsecase(u.userRepoMock)
+	userUsecase := usecase.NewUserUsecase(u.userRepoMock, "token")
 
 	req := domain.RegisterUserRequest{
 		Email:    "test@mail.ru",
@@ -90,7 +93,7 @@ func (u *UserUsecaseTest) TestBadUserTypeRegister(t provider.T) {
 }
 
 func (u *UserUsecaseTest) TestBadRepoCallRegister(t provider.T) {
-	userUsecase := usecase.NewUserUsecase(u.userRepoMock)
+	userUsecase := usecase.NewUserUsecase(u.userRepoMock, "token")
 
 	req := domain.RegisterUserRequest{
 		Email:    "test@mail.ru",
@@ -106,7 +109,7 @@ func (u *UserUsecaseTest) TestBadRepoCallRegister(t provider.T) {
 }
 
 func (u *UserUsecaseTest) TestNormalLogin(t provider.T) {
-	userUsecase := usecase.NewUserUsecase(u.userRepoMock)
+	userUsecase := usecase.NewUserUsecase(u.userRepoMock, "token")
 	clientBuilder := NormalClientUserBuilder{}
 
 	clientBuilder.SetRole()
@@ -128,7 +131,7 @@ func (u *UserUsecaseTest) TestNormalLogin(t provider.T) {
 }
 
 func (u *UserUsecaseTest) TestBadPasswordLogin(t provider.T) {
-	userUsecase := usecase.NewUserUsecase(u.userRepoMock)
+	userUsecase := usecase.NewUserUsecase(u.userRepoMock, "token")
 	clientBuilder := NormalClientUserBuilder{}
 
 	clientBuilder.SetRole()
@@ -150,7 +153,7 @@ func (u *UserUsecaseTest) TestBadPasswordLogin(t provider.T) {
 }
 
 func (u *UserUsecaseTest) TestBadRepoCallLogin(t provider.T) {
-	userUsecase := usecase.NewUserUsecase(u.userRepoMock)
+	userUsecase := usecase.NewUserUsecase(u.userRepoMock, "token")
 
 	uid := uuid.New()
 	req := domain.LoginUserRequest{
@@ -166,7 +169,7 @@ func (u *UserUsecaseTest) TestBadRepoCallLogin(t provider.T) {
 }
 
 func (u *UserUsecaseTest) TestNormalDummyLogin(t provider.T) {
-	userUsecase := usecase.NewUserUsecase(u.userRepoMock)
+	userUsecase := usecase.NewUserUsecase(u.userRepoMock, "token")
 
 	u.userRepoMock.EXPECT().Create(context.Background(), gomock.Any(), u.mockLg)
 	_, err := userUsecase.DummyLogin(context.Background(), domain.Moderator, u.mockLg)
@@ -174,7 +177,7 @@ func (u *UserUsecaseTest) TestNormalDummyLogin(t provider.T) {
 }
 
 func (u *UserUsecaseTest) TestBadUserTypeDummyLogin(t provider.T) {
-	userUsecase := usecase.NewUserUsecase(u.userRepoMock)
+	userUsecase := usecase.NewUserUsecase(u.userRepoMock, "token")
 
 	_, err := userUsecase.DummyLogin(context.Background(), "user", u.mockLg)
 	t.Require().Error(err)

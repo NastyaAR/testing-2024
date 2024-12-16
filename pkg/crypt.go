@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )

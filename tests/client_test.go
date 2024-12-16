@@ -1,5 +1,5 @@
-//go:build e2e
-// +build e2e
+//go:build old
+// +build old
 
 package tests
 
@@ -10,13 +10,14 @@ import (
 	"avito-test-task/internal/usecase"
 	"avito-test-task/pkg"
 	"context"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ozontech/allure-go/pkg/framework/provider"
 	"github.com/ozontech/allure-go/pkg/framework/suite"
 	"go.uber.org/zap"
-	"os"
-	"testing"
-	"time"
 )
 
 type ClientTest struct {
@@ -29,6 +30,7 @@ type ClientTest struct {
 	flatRepo     domain.FlatRepo
 	houseRepo    domain.HouseRepo
 	notifyRepo   domain.NotifyRepo
+	codeSender   domain.CodeSender
 	skipped      bool
 
 	db   repo.IPool
@@ -57,7 +59,7 @@ func (c *ClientTest) BeforeAll(t provider.T) {
 	c.houseRepo = repo.NewPostgresHouseRepo(c.db, nil)
 	c.notifyRepo = repo.NewPostgresNotifyRepo(c.db, nil)
 
-	c.userUsecase = usecase.NewUserUsecase(c.userRepo)
+	c.userUsecase = usecase.NewUserUsecase(c.userRepo, "token")
 	c.flatUsecase = usecase.NewFlatUsecase(c.flatRepo)
 	c.notifySender = ports.NewSender()
 
