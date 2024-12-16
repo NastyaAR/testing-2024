@@ -93,10 +93,7 @@ jobs:
           sleep 5
           docker compose up -d backend1 backend2 backend3 nginx
           sleep 5
-          cd tests && (go test . -tags=auth || true)
-          docker logs app1
-          docker logs app2
-          docker logs app3
+          cd tests && go test . -tags=auth
 
 
       - name: Archive code test results
