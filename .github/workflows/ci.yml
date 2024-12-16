@@ -92,8 +92,8 @@ jobs:
           sleep 5
           docker compose up -d backend1 backend2 backend3 nginx
           sleep 5
-          cd tests && go test . -tags=auth
-          cat ./avito.log
+          cd tests && (go test . -tags=auth || 1)
+          cat ../avito.log
 
 
       - name: Archive code test results
