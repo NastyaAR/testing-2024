@@ -210,3 +210,58 @@ func (u *UserUsecase) DummyLogin(ctx context.Context, userType string, lg *zap.L
 
 	return domain.LoginUserResponse{token}, nil
 }
+
+func (u *UserUsecase) Update(ctx context.Context, userReq *domain.UpdatePasswordRequest, lg *zap.Logger) (domain.UpdatePasswordResponse, error) {
+	lg.Info("user usecase: update")
+
+	if userReq == nil {
+		lg.Warn("user usecase: update error: bad nil request")
+		return domain.UpdatePasswordResponse{},
+			fmt.Errorf("user usecase: update error: %w", domain.ErrUser_BadRequest)
+	}
+
+	if userReq.NewPassword == "" {
+		lg.Warn("user usecase: update error: bad empty password")
+		return domain.UpdatePasswordResponse{},
+			fmt.Errorf("user usecase: update error: %w", domain.ErrUser_BadPassword)
+	}
+
+	expectedUser, err := u.userRepo.GetByID(ctx, userReq.ID, lg)
+	if err != nil {
+		lg.Warn("user usescase: update error", zap.Error(err))
+		return domain.UpdatePasswordResponse{}, fmt.Errorf("user usecase: update error: %v", err.Error())
+	}
+
+	expectedCode, err := u.userRepo.GetHashCode(ctx, &expectedUser, lg)
+	if err != nil {
+		lg.Warn("user usescase: update error", zap.Error(err))
+		return domain.UpdatePasswordResponse{}, fmt.Errorf("user usecase: update error: %v", err.Error())
+	}
+
+	err = pkg.IsEqualPasswords(expectedCode, strconv.Itoa(userReq.Code))
+	if err != nil {
+		lg.Warn("user usecase: update error", zap.Error(err))
+		return domain.UpdatePasswordResponse{}, fmt.Errorf("user usecase: update error: %v", err.Error())
+	}
+
+	encryptedPassword, err := pkg.EncryptPassword(userReq.NewPassword, lg)
+	if err != nil {
+		lg.Warn("user usecase: update error", zap.Error(err))
+		return domain.UpdatePasswordResponse{}, fmt.Errorf("user usecase: update error: %v", err.Error())
+	}
+
+	user := domain.User{
+		UserID:   expectedUser.UserID,
+		Mail:     expectedUser.Mail,
+		Password: encryptedPassword,
+		Role:     expectedUser.Role,
+	}
+
+	err = u.userRepo.Update(ctx, &user, lg)
+	if err != nil {
+		lg.Warn("user usecase: update error", zap.Error(err))
+		return domain.UpdatePasswordResponse{}, fmt.Errorf("user usecase: update error: %v", err.Error())
+	}
+
+	return domain.UpdatePasswordResponse{userReq.ID}, nil
+}

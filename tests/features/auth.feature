@@ -16,3 +16,16 @@ Feature: Two-factor authentification
       Then I get message 'we send code to your telegram'
     When I incorrectly provide user_id and code
       Then I get error 
+  
+  Scenario: Successful changing password
+    Given I register with @N_AR24, password, client
+    When I log with user_id and password
+      Then I get message 'we send code to your telegram'
+    When I want change to newpassword, user_id, code
+
+  Scenario: Failure changing password
+    Given I register with @N_AR24, password, client
+    When I log with user_id and password
+      Then I get message 'we send code to your telegram'
+    When I want change to empty password, user_id, code
+

@@ -57,6 +57,16 @@ type FinalLoginUserResponse struct {
 	Token string `json:"token"`
 }
 
+type UpdatePasswordRequest struct {
+	ID          uuid.UUID `json:"id"`
+	Code        int       `json:"code"`
+	NewPassword string    `json:"password"`
+}
+
+type UpdatePasswordResponse struct {
+	ID uuid.UUID `json:"id"`
+}
+
 type LoginUserResponse struct {
 	Message string `json:"message"`
 }
@@ -70,6 +80,7 @@ type UserUsecase interface {
 	Login(ctx context.Context, userReq *LoginUserRequest, lg *zap.Logger) (LoginUserResponse, error)
 	DummyLogin(ctx context.Context, userType string, lg *zap.Logger) (LoginUserResponse, error)
 	FinalLogin(ctx context.Context, userReq *FinalLoginUserRequest, lg *zap.Logger) (FinalLoginUserResponse, error)
+	Update(ctx context.Context, userReq *UpdatePasswordRequest, lg *zap.Logger) (UpdatePasswordResponse, error)
 }
 
 type UserRepo interface {

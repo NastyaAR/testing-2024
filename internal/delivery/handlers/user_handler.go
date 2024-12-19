@@ -207,3 +207,53 @@ func (h *UserHandler) DummyLogin(w http.ResponseWriter, r *http.Request) {
 
 	w.Write(respBody)
 }
+
+func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	var (
+		respBody      []byte
+		loginRequest  domain.UpdatePasswordRequest
+		loginResponse domain.UpdatePasswordResponse
+	)
+	defer r.Body.Close()
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		h.lg.Warn("user handler: change error", zap.Error(err))
+		respBody = CreateErrorResponse(r.Context(), ReadHTTPBodyError, ReadHTTPBodyMsg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(respBody)
+		return
+	}
+
+	err = json.Unmarshal(body, &loginRequest)
+	if err != nil {
+		h.lg.Warn("user handler: change error", zap.Error(err))
+		respBody = CreateErrorResponse(r.Context(), UnmarshalHTTPBodyError, UnmarshalHTTPBodyMsg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(respBody)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), h.dbTimeout*time.Second)
+	defer cancel()
+
+	loginResponse, err = h.uc.Update(ctx, &loginRequest, h.lg)
+	if err != nil {
+		h.lg.Warn("user handler: change error", zap.Error(err))
+		respBody = CreateErrorResponse(r.Context(), LoginUserError, LoginUserErrorMsg)
+		w.WriteHeader(GetReturnHTTPCode(w, err))
+		w.Write(respBody)
+		return
+	}
+
+	respBody, err = json.Marshal(loginResponse)
+	if err != nil {
+		h.lg.Warn("user handler: change error", zap.Error(err))
+		respBody = CreateErrorResponse(r.Context(), MarshalHTTPBodyError, MarshalHTTPBodyErrorMsg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(respBody)
+		return
+	}
+
+	w.Write(respBody)
+}

@@ -70,6 +70,7 @@ func Run(cfg *config.Config) {
 	r.Post("/register", userHandler.Register)
 	r.Post("/login", userHandler.Login)
 	r.Post("/finallogin", userHandler.FinalLogin)
+	r.Post("/change", userHandler.ChangePassword)
 	r.Post("/flat/update", mdware.AuthMiddleware(mdware.AccessMiddleware(flatHandler.Update)))
 	r.Post("/flat/create", mdware.AuthMiddleware(flatHandler.Create))
 	r.Post("/house/{id}/subscribe", mdware.AuthMiddleware(houseHandler.Subscribe))

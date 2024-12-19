@@ -37,7 +37,7 @@ func register(t gobdd.StepTest, ctx gobdd.Context, tg, password, role string) {
 	}
 	reader := bytes.NewReader(body)
 
-	resp, err := http.Post("http://0.0.0.0:80/register", "application/json", reader)
+	resp, err := http.Post("http://0.0.0.0:8081/register", "application/json", reader)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -71,7 +71,7 @@ func login(t gobdd.StepTest, ctx gobdd.Context, userId, password string) {
 	}
 	reader := bytes.NewReader(body)
 
-	resp, err := http.Post("http://0.0.0.0:80/login", "application/json", reader)
+	resp, err := http.Post("http://0.0.0.0:8081/login", "application/json", reader)
 	var r domain.LoginUserResponse
 
 	body, err = ioutil.ReadAll(resp.Body)
@@ -117,7 +117,7 @@ func verificate(t gobdd.StepTest, ctx gobdd.Context) {
 	}
 	reader := bytes.NewReader(body)
 
-	resp, err := http.Post("http://0.0.0.0:80/finallogin", "application/json", reader)
+	resp, err := http.Post("http://0.0.0.0:8081/finallogin", "application/json", reader)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -144,7 +144,7 @@ func badVerificate(t gobdd.StepTest, ctx gobdd.Context) {
 	}
 	reader := bytes.NewReader(body)
 
-	resp, err := http.Post("http://0.0.0.0:80/finallogin", "application/json", reader)
+	resp, err := http.Post("http://0.0.0.0:8081/finallogin", "application/json", reader)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -183,7 +183,7 @@ func badLogin(t gobdd.StepTest, ctx gobdd.Context, userId, password string) {
 	}
 	reader := bytes.NewReader(body)
 
-	resp, err := http.Post("http://0.0.0.0:80/login", "application/json", reader)
+	resp, err := http.Post("http://0.0.0.0:8081/login", "application/json", reader)
 	var r handlers.ErrorResponse
 
 	body, err = ioutil.ReadAll(resp.Body)
@@ -220,7 +220,7 @@ func loginVer(t gobdd.StepTest, ctx gobdd.Context, userId, password string) {
 	}
 	reader := bytes.NewReader(body)
 
-	resp, err := http.Post("http://0.0.0.0:80/login", "application/json", reader)
+	resp, err := http.Post("http://0.0.0.0:8081/login", "application/json", reader)
 	var r domain.LoginUserResponse
 
 	body, err = ioutil.ReadAll(resp.Body)
@@ -234,6 +234,84 @@ func loginVer(t gobdd.StepTest, ctx gobdd.Context, userId, password string) {
 	}
 
 	ctx.Set("message", r.Message)
+}
+
+func changePassword(t gobdd.StepTest, ctx gobdd.Context) {
+	tg, _ := bot.New(os.Getenv("TOKEN"))
+	params := bot.GetChatParams{
+		ChatID: "1186604465",
+	}
+	ch, err := tg.GetChat(context.Background(), &params)
+
+	code := ch.PinnedMessage.Text
+	intCode, _ := strconv.Atoi(code)
+
+	request := domain.UpdatePasswordRequest{uuid.MustParse(uid), intCode, "newpassword"}
+
+	body, err := json.Marshal(request)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	reader := bytes.NewReader(body)
+
+	resp, err := http.Post("http://0.0.0.0:8081/change", "application/json", reader)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+	var r domain.UpdatePasswordResponse
+
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	err = json.Unmarshal(body, &r)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	if uid != r.ID.String() {
+		t.Fatalf("not success change password")
+	}
+}
+
+func badChangePassword(t gobdd.StepTest, ctx gobdd.Context) {
+	tg, _ := bot.New(os.Getenv("TOKEN"))
+	params := bot.GetChatParams{
+		ChatID: "1186604465",
+	}
+	ch, err := tg.GetChat(context.Background(), &params)
+
+	code := ch.PinnedMessage.Text
+	intCode, _ := strconv.Atoi(code)
+
+	request := domain.UpdatePasswordRequest{uuid.MustParse(uid), intCode, ""}
+
+	body, err := json.Marshal(request)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	reader := bytes.NewReader(body)
+
+	resp, err := http.Post("http://0.0.0.0:8081/change", "application/json", reader)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+	var r domain.UpdatePasswordResponse
+
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	err = json.Unmarshal(body, &r)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("doent similar http codes %d", resp.StatusCode)
+	}
 }
 
 func TestScenarios(t *testing.T) {
@@ -266,6 +344,9 @@ func TestScenarios(t *testing.T) {
 	suite.AddStep(`I get message '([a-zA-Z ]+)'`, checkLogin)
 	suite.AddStep(`I incorrectly provide user_id and code`, badVerificate)
 	suite.AddStep(`I get error`, checkBadLogin)
+	suite.AddStep(`I want change to newpassword, user_id, code`, changePassword)
+	suite.AddStep(`I want change to empty password, user_id, code`, badChangePassword)
+
 	suite.Run()
 
 	users, err := userRepo.GetAll(context.Background(), 0, 100, zap.NewNop())
