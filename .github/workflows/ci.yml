@@ -1,43 +1,45 @@
-name: Build and Test
+name: Lint and Build and Test
 
 on:
   push:
     branches:
       - main
       - lab02
+      - lab05
 
 jobs:
-#  build:
-#    runs-on: ubuntu-latest
-#    environment: avito-env
-#
-#    steps:
-#      - name: Check out repository
-#        uses: actions/checkout@v2
-#
-#      - name: Set up Docker Buildx
-#        uses: docker/setup-buildx-action@v1
-#
-#      - name: Run services
-#        env:
-#          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-#          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-#          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-#        run: |
-#          export POSTGRES_USER=$POSTGRES_USER POSTGRES_PASSWORD=$POSTGRES_PASSWORD POSTGRES_DB=$POSTGRES_DB
-#          docker compose up -d
-#          docker logs postgres-db
-#
-#      - name: Check services
-#        run: |
-#          sleep 10
-#          docker-compose ps
-#
-#      - name: Stop services
-#        run:
-#          docker compose down
+  lint:
+    runs-on: ubuntu-latest
+    environment: test-env
+
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.23
+
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Go vet complexity
+        uses: shoooooman/go-complexity-analysis-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          cycloover: 10
+          halsteadover: 50
+      
+      - name: Install golint
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2
+
+      - name: Launch golint
+        run: |
+          golangci-lint run cmd/... config/... internal/... pkg/...
+          if [ $? -ne 0 ]; then exit 1; fi
+
 
   test:
+    needs: lint
     runs-on: ubuntu-latest
     environment: test-env
 
