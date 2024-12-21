@@ -20,17 +20,16 @@ jobs:
 
       - name: Check out repository
         uses: actions/checkout@v2
-
-      - name: Go vet complexity
-        uses: shoooooman/go-complexity-analysis-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          cycloover: 10
-          # halsteadover: 50
       
-      - name: Install golint
+      - name: Install golint and go vet
         run: |
+          go install github.com/rauzh/go-complexity-analysis/cmd/complexity@9a7cad4
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2
+
+      - name: Launch govet
+        run: |
+          go vet -vettool="$(which complexity)" --cycloover 10 --halsteadover 40 ./...
+          if [ $? -ne 0 ]; then exit 1; fi
 
       - name: Launch golint
         run: |
