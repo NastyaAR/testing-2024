@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - lab02
-      - lab05
+      - lab06
 
 jobs:
   lint:
